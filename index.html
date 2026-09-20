@@ -36,12 +36,12 @@ button{touch-action:manipulation}
 .only-print{display:none}
 
 /* ---------- Hero ---------- */
-.hero{background:var(--hero); color:#fff; border-bottom:4px solid var(--gold); text-align:center; padding:calc(34px + env(safe-area-inset-top,0px)) 16px 30px}
-.hero .eyebrow{color:var(--gold-l); font-size:.98rem; letter-spacing:.06em; margin-top:16px}
-.hero h1{font-size:clamp(1.8rem,6vw,2.7rem); font-weight:600; margin-top:4px; line-height:1.15}
-.hero p{margin:10px 0 0; font-size:1rem; color:#f3e9e4}
+.hero{background:var(--hero); color:#fff; border-bottom:4px solid var(--gold); text-align:center; padding:calc(26px + env(safe-area-inset-top,0px)) 20px 26px}
+.hero .eyebrow{color:var(--gold-l); font-size:.86rem; letter-spacing:.14em; text-transform:uppercase; margin-top:18px}
+.hero h1{font-size:clamp(1.7rem,5.5vw,2.3rem); font-weight:600; margin-top:8px; line-height:1.2}
+.hero p{margin:10px auto 0; font-size:.95rem; color:#eadfd8; max-width:34ch; line-height:1.5}
 .hlogo{width:96px; height:96px; border-radius:16px; object-fit:cover; border:3px solid #e9d9b6; background:var(--card); box-shadow:0 4px 14px rgba(0,0,0,.28)}
-.hlogo.big{width:clamp(170px,48vw,230px); height:clamp(170px,48vw,230px); border-radius:22px}
+.hlogo.big{width:clamp(108px,28vw,136px); height:clamp(108px,28vw,136px); border-radius:20px; border-width:2px}
 .hero.compact{text-align:left; padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px}
 .hero-in{max-width:1000px; margin:0 auto; display:flex; align-items:center; gap:18px}
 .hero.compact .eyebrow{margin-top:0; font-size:.86rem}
@@ -53,12 +53,16 @@ button{touch-action:manipulation}
 .sb-in{max-width:1000px; margin:0 auto; padding:11px 16px; display:flex; justify-content:space-between; align-items:center; gap:8px 14px; flex-wrap:wrap}
 .sb-in b{color:var(--ink); font-weight:600}
 .sb-act{display:flex; gap:14px; flex-wrap:wrap}
-.foot{text-align:center; color:var(--muted); font-size:.82rem; padding:22px 14px calc(22px + env(safe-area-inset-bottom,0px)); line-height:1.6}
+.foot{text-align:center; color:var(--muted); font-size:.8rem; padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px)); line-height:1.7}
 
 /* ---------- Login ---------- */
 #login-view{min-height:100vh; display:flex; flex-direction:column}
-.login-body{flex:1; display:flex; justify-content:center; align-items:flex-start; padding:26px 16px}
-.login-body .panel{width:100%; max-width:420px}
+.login-body{flex:1; display:flex; justify-content:center; align-items:flex-start; padding:34px 20px 20px}
+.login-body .panel{width:100%; max-width:400px; padding:26px 24px 28px}
+.login-body label{margin-bottom:20px}
+.login-body .btn{margin-top:8px; min-height:50px}
+#login-err{min-height:0; margin:0}
+#login-err:not(:empty){margin:-6px 0 14px}
 
 /* ---------- Cards, forms, buttons ---------- */
 .panel{background:var(--card); border:1px solid var(--line); border-top:4px solid var(--gold); border-radius:14px; box-shadow:0 2px 10px rgba(60,30,20,.06); padding:18px}
@@ -195,35 +199,100 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
 .toast.show{opacity:1; transform:translate(-50%,0)}
 .toast.bad{background:var(--bad); color:#fff}
 
+
+/* ---------- Loading splash ---------- */
+#splash{position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;
+  background:radial-gradient(900px 600px at 50% 32%, #6d2a34 0%, var(--hero) 55%, var(--hero-d) 100%);
+  color:#fff; opacity:1; transition:opacity .6s ease; animation:splashFail .4s 40s forwards}
+#splash.hide{opacity:0; pointer-events:none}
+@keyframes splashFail{to{opacity:0; visibility:hidden; pointer-events:none}}
+.sp-logo{position:relative; width:clamp(190px,46vw,250px); aspect-ratio:1; margin-bottom:30px}
+.sp-logo::before{content:""; position:absolute; inset:-34%; border-radius:50%;
+  background:radial-gradient(circle, rgba(227,197,132,.55) 0%, rgba(227,197,132,.18) 42%, transparent 68%);
+  animation:spGlow 3.2s ease-in-out infinite}
+.sp-logo img{position:relative; width:100%; height:100%; object-fit:cover; display:block; border-radius:26px; background:#f3ead6;
+  border:4px solid var(--gold); box-shadow:0 0 0 3px rgba(227,197,132,.35), 0 14px 40px rgba(0,0,0,.45)}
+@keyframes spGlow{0%,100%{transform:scale(.86); opacity:.55}50%{transform:scale(1.08); opacity:1}}
+#splash h1{font-size:clamp(1.9rem,6.5vw,2.8rem); font-weight:600; line-height:1.15}
+#splash .sp-sub{color:var(--gold-l); font-size:clamp(.95rem,3.4vw,1.1rem); letter-spacing:.09em; margin-top:8px}
+.sp-bar{position:relative; width:min(280px,66vw); height:5px; border-radius:99px; background:rgba(255,255,255,.16); overflow:hidden; margin:34px 0 16px}
+.sp-bar::after{content:""; position:absolute; top:0; bottom:0; left:-45%; width:45%; border-radius:99px;
+  background:linear-gradient(90deg, transparent, var(--gold-l), var(--gold), transparent); animation:spSweep 1.4s ease-in-out infinite}
+@keyframes spSweep{0%{left:-45%}100%{left:100%}}
+#splash-msg{font-size:.92rem; color:#eadfd8; min-height:1.4em; max-width:320px; line-height:1.4}
+@media (prefers-reduced-motion: reduce){ #splash{display:none!important} }
+
 /* ---------- Phones ---------- */
 @media (max-width:700px){
-  .wrap{padding:14px 12px calc(100px + env(safe-area-inset-bottom,0px))}
-  .hero.compact{padding:calc(14px + env(safe-area-inset-top,0px)) 14px 14px}
-  .hero-in{gap:12px}
-  .hero.compact .hlogo{width:58px; height:58px; border-radius:12px; border-width:2px}
-  .hero.compact .eyebrow{font-size:.72rem; letter-spacing:.04em}
-  .hero.compact h1{font-size:1.25rem}
+  body{line-height:1.5}
+  .wrap{padding:20px 16px calc(120px + env(safe-area-inset-bottom,0px))}
+  .hero.compact{padding:calc(18px + env(safe-area-inset-top,0px)) 18px 18px}
+  .hero-in{gap:14px}
+  .hero.compact .hlogo{width:64px; height:64px; border-radius:14px; border-width:2px}
+  .hero.compact .eyebrow{font-size:.72rem; letter-spacing:.04em; line-height:1.4}
+  .hero.compact h1{font-size:1.4rem; margin-top:4px}
   .hero.compact p{display:none}
-  .panel{padding:14px}
-  #date-chips{grid-template-columns:repeat(4,1fr)}
-  .grid3{grid-template-columns:1fr}
-  .stat b{font-size:1.3rem}
-  .namebox{columns:1}
-  .filters{grid-template-columns:1fr 1fr}
+  .sb-in{padding:14px 18px; gap:10px 16px}
+  .sb-act{gap:20px}
+  .panel{padding:22px 18px 24px}
+  .step{margin-bottom:30px}
+  .step>h2{font-size:1.12rem; margin-bottom:16px}
+  .step>h2 .n{width:28px; height:28px}
+  label{font-size:.86rem; margin-bottom:20px}
+  label>input,label>select{margin-top:8px}
+  .grid3{grid-template-columns:1fr; gap:0}
+  .grid3 label:last-child{margin-bottom:0}
+  input[type=text],input[type=email],input[type=password],select,textarea{min-height:52px; padding:14px; border-radius:12px}
+  textarea{min-height:200px}
+  #date-chips{grid-template-columns:repeat(4,1fr); gap:10px}
+  .chip.dt{padding:11px 2px; border-radius:14px}
+  .chip.dt small{font-size:.74rem; margin-bottom:2px}
+  .chip.dt b{font-size:.95rem}
+  #hour-chips{gap:10px}
+  .chip.hr{height:58px; border-radius:16px; font-size:1.2rem}
+  .quick{gap:10px; margin-top:16px}
+  .btn.small{min-height:42px; padding:9px 15px}
+  .row{margin-top:10px}
+  .sugbox{margin-top:18px}
+  .chips{gap:10px}
+  #review-btn{margin-top:6px; min-height:54px; font-size:1.05rem}
+  .result{margin-top:20px; padding:14px 16px}
+  .filters{grid-template-columns:1fr 1fr; gap:16px 14px}
+  .filters label{margin:0}
   .filters label:last-child{grid-column:1/-1}
+  .stats{gap:12px; margin:18px 0}
+  .stat{padding:14px 8px}
+  .stat b{font-size:1.35rem}
+  .strip{gap:8px; margin-bottom:18px}
+  .strip div{padding:9px 4px}
+  .tools{margin:16px 0 12px}
+  #rec-cards .dh{margin:22px 0 12px; padding:9px 14px}
+  .rcard{padding:16px; margin-bottom:12px; border-radius:14px}
+  .rc-hours{gap:8px; margin:14px 0 12px}
+  .hp{height:42px}
+  .rp-card{padding:18px 16px; margin-top:20px}
+  .rp-head{margin-bottom:14px}
+  .rp-head .actions{width:100%; gap:10px}
+  .rp-head .actions .btn{flex:1}
+  .usergrid{gap:18px}
+  .usergrid label{margin:0}
+  .namebox{columns:1}
   .tabs{position:fixed; left:0; right:0; bottom:0; z-index:40; margin:0; background:var(--card); border-top:1px solid var(--line); border-bottom:0;
-    padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px)); justify-content:space-around; gap:2px; overflow:visible; box-shadow:0 -4px 16px rgba(60,30,20,.1)}
-  .tab{flex:1; flex-direction:column; gap:3px; font-family:var(--sans); font-size:.72rem; padding:7px 2px; border-bottom:0; margin:0; border-radius:10px; justify-content:center}
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px)); justify-content:space-around; gap:4px; overflow:visible; box-shadow:0 -4px 16px rgba(60,30,20,.1)}
+  .tab{flex:1; flex-direction:column; gap:4px; font-family:var(--sans); font-size:.74rem; padding:9px 2px; border-bottom:0; margin:0; border-radius:12px; justify-content:center}
   .tab[aria-selected=true]{background:#f3e9cf; color:var(--maroon)}
   .tab .lg{display:none} .tab .sm{display:inline}
-  .tab .ic{width:22px; height:22px}
-  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .tab .ic{width:23px; height:23px}
+  .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
   dialog{margin:auto 0 0 0; max-width:100%; width:100%; border-radius:18px 18px 0 0; border-bottom:0}
-  .dlg-card{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  .dlg-card{padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+  .dlg-card label{margin-bottom:16px}
+  .dlg-actions{gap:10px; margin-top:12px}
   .dlg-actions .btn{flex:1}
-  #review-btn{position:sticky; bottom:calc(78px + env(safe-area-inset-bottom,0px)); z-index:5; box-shadow:0 6px 18px rgba(63,18,25,.35)}
-  .rp-head .actions{width:100%}
-  .rp-head .actions .btn{flex:1}
+  .hero{padding:calc(22px + env(safe-area-inset-top,0px)) 20px 24px}
+  .hero .eyebrow{font-size:.78rem; margin-top:16px}
+  .login-body{padding:30px 18px 16px}
+  .login-body .panel{padding:24px 20px 26px}
 }
 
 /* ---------- Print (class advisor reports) ---------- */
@@ -253,11 +322,24 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
 </head>
 <body>
 
+<!-- ============ LOADING SPLASH ============ -->
+<div id="splash" role="status" aria-live="polite">
+  <div class="sp-logo"><img src="Logo.png" alt="Pratibha Arts Fest"></div>
+  <h1>Pratibha 2026-27</h1>
+  <div class="sp-sub">Rhythm of Sapta Swaras</div>
+  <div class="sp-bar"></div>
+  <div id="splash-msg">Loading duty attendance…</div>
+</div>
+<script>
+// Failsafe: if the main script ever fails to start, the splash removes itself.
+setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remove(); }, 40000);
+</script>
+
 <!-- ============ LOGIN ============ -->
 <main id="login-view" hidden>
   <header class="hero">
     <img class="hlogo big" src="Logo.png" alt="Pratibha Arts Fest">
-    <div class="eyebrow">Pratibha Arts Fest 2026-27 · Rhythm of Sapta Swaras</div>
+    <div class="eyebrow">Pratibha Arts Fest 2026-27</div>
     <h1>Duty Attendance</h1>
     <p>Hour-wise attendance for students on practice, volunteering &amp; decoration duty</p>
   </header>
@@ -274,9 +356,9 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
     </form>
   </div>
   <footer class="foot">
-    Tip: add this page to your phone's home screen.<br>
-    iPhone: Share → Add to Home Screen · Android: menu → Install app<br>
-    Pratibha 2026-27 · Rhythm of Sapta Swaras
+    Add this page to your phone's home screen for quick access.<br>
+    iPhone: Share → Add to Home Screen<br>
+    Android: menu → Install app
   </footer>
 </main>
 
@@ -1185,13 +1267,34 @@ $('#user-body').addEventListener('click', async e => {
   } catch (err) { toast(err.message, 'bad'); }
 });
 
-/* ---------- start ---------- */
+/* ---------- loading splash + start ---------- */
+const SPLASH_MIN_MS = 1500, SLOW_MSG = 'The server is taking longer than usual - trying again...';
+const splashT0 = performance.now();
+const setSplashMsg = t => { const m = $('#splash-msg'); if (m) m.textContent = t; };
+function hideSplash(){
+  const el = $('#splash'); if (!el) return;
+  const wait = Math.max(0, SPLASH_MIN_MS - (performance.now() - splashT0));
+  setTimeout(() => { el.classList.add('hide'); setTimeout(() => el.remove(), 800); }, wait);
+}
+
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 (async function start(){
-  if (state.token){
-    try { await boot(); return; } catch (e) { /* fall through to login */ }
+  const slow = setTimeout(() => setSplashMsg(SLOW_MSG), 8000);
+  try {
+    if (state.token){
+      for (let i = 0; i < 3; i++){
+        try { await boot(); return; }
+        catch (e) {
+          if (!state.token) break;              // session expired -> login screen
+          if (i < 2){ setSplashMsg(SLOW_MSG); await new Promise(r => setTimeout(r, 1500)); }
+        }
+      }
+    }
+    if (!state.user) show('login');
+  } finally {
+    clearTimeout(slow);
+    hideSplash();
   }
-  show('login');
 })();
 </script>
 </body>
