@@ -176,6 +176,13 @@ button.hp.on{cursor:pointer}
 .rp-card tfoot td.nm{background:#f7f0df}
 .rp-card td.tt,.rp-card th.tt{text-align:center; font-weight:700; color:var(--maroon)}
 
+/* Locked date for coordinators */
+.datelock{display:flex; align-items:center; gap:12px; background:#f3e9cf; border:1px solid var(--gold-l); border-radius:12px; padding:12px 14px}
+.datelock svg{width:22px; height:22px; flex:none; stroke:var(--maroon); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.datelock b{display:block; font-size:1.05rem; color:var(--maroon)}
+.datelock span{font-size:.82rem; color:var(--muted)}
+.datelock.off{background:#fbeaea; border-color:#e8bcbc; color:var(--bad); font-size:.9rem}
+
 /* ---------- Users ---------- */
 .usergrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; align-items:end}
 .usergrid label{margin:0}
@@ -505,7 +512,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
         </table>
       </div>
       <div id="rec-cards" hidden></div>
-      <p class="cls" style="margin-top:8px">Tap a filled hour to remove just that hour. You can remove your own entries; admins can remove any. For class-wise reports, use the Class reports tab.</p>
+      <p class="cls" style="margin-top:8px">Tap a filled hour to remove just that hour. Coordinators can remove only their own entries from today; admins can change any. For class-wise reports, use the Class reports tab.</p>
     </section>
 
     <!-- Class reports -->
@@ -723,8 +730,9 @@ function buildApp(){
   $('#tab-users-btn').hidden = state.user.role !== 'admin';
 
   const dates = dateRange(state.cfg.dateFrom, state.cfg.dateTo);
-  const today = ymd(new Date());
-  state.mk = { date: dates.includes(today) ? today : dates[0], course: '', sem: '', batch: '', hours: new Set() };
+  const today = state.cfg.today || ymd(new Date());
+  const admin = state.user.role === 'admin';
+  state.mk = { date: dates.includes(today) ? today : (admin ? dates[0] : ''), course: '', sem: '', batch: '', hours: new Set() };
   renderDateChips(dates); renderHourChips();
   fillCourse(); restoreLast();
   $('#names').value = store.get('pa_draft') || ''; updateCount();
@@ -743,8 +751,19 @@ function switchTab(name){
 }
 
 /* ---------- Mark: date + hours ---------- */
+const LOCK_SVG = '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
 function renderDateChips(dates){
-  $('#date-chips').innerHTML = dates.map(d => {
+  const box = $('#date-chips');
+  if (state.user.role !== 'admin'){
+    // Coordinators cannot choose the date: it is today, taken from the server clock.
+    box.style.display = 'block';
+    box.innerHTML = state.mk.date
+      ? `<div class="datelock">${LOCK_SVG}<div><b>${esc(fmtDate(state.mk.date))}</b><span>Set automatically to today</span></div></div>`
+      : `<div class="datelock off">${LOCK_SVG}<div>Attendance can only be marked on the fest days, ${esc(fmtShort(dates[0]))} – ${esc(fmtShort(dates[dates.length - 1]))}.</div></div>`;
+    return;
+  }
+  box.style.display = '';
+  box.innerHTML = dates.map(d => {
     const dt = parseYmd(d);
     return `<button type="button" class="chip dt" data-d="${d}" aria-pressed="${d === state.mk.date}"><small>${DAYS[dt.getDay()]}</small><b>${dt.getDate()} ${MONTHS[dt.getMonth()]}</b></button>`;
   }).join('');
@@ -882,7 +901,7 @@ $('#sug-all').onclick = () => {
 $('#review-btn').onclick = async () => {
   const m = state.mk, err = $('#mark-err'); err.textContent = ''; $('#mark-result').innerHTML = '';
   const names = parseNames($('#names').value), hours = [...m.hours].sort((a,b) => a-b);
-  if (!m.date) return err.textContent = 'Pick a date.';
+  if (!m.date) return err.textContent = state.user.role === 'admin' ? 'Pick a date.' : 'Attendance can only be marked on the fest days.';
   if (!m.course || !m.sem || !m.batch) return err.textContent = 'Select the course, semester and batch.';
   if (!hours.length) return err.textContent = 'Select at least one hour.';
   if (!names.length) return err.textContent = 'Enter at least one student name.';
@@ -955,7 +974,7 @@ function filteredRecs(){
 const cmpRec = (a,b) =>
   a.date.localeCompare(b.date) || a.course.localeCompare(b.course) || a.sem.localeCompare(b.sem) ||
   a.batch.localeCompare(b.batch, undefined, {numeric:true}) || a.name.localeCompare(b.name);
-const canDel = r => state.user.role === 'admin' || r.by === state.user.email;
+const canDel = r => state.user.role === 'admin' || (r.by === state.user.email && r.date === state.cfg.today);
 
 function renderRecords(){
   if (!state.user) return;
@@ -1286,6 +1305,20 @@ $('#user-body').addEventListener('click', async e => {
       await api('deleteUser', { email }); toast('Account deleted.'); loadUsers();
     }
   } catch (err) { toast(err.message, 'bad'); }
+});
+
+/* Coordinators: if the day changes while the page is open, pick up the new date */
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden || !state.user || state.user.role === 'admin') return;
+  try {
+    const r = await api('init');
+    if (r.config.today !== state.cfg.today){
+      state.cfg = r.config;
+      const dates = dateRange(r.config.dateFrom, r.config.dateTo);
+      state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
+      renderDateChips(dates); renderRecords();
+    }
+  } catch (e) {}
 });
 
 /* ---------- loading splash + start ---------- */
