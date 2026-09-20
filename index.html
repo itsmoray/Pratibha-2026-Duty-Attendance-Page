@@ -4,8 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#511c24">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Duty Attendance">
 <title>Duty Attendance · Pratibha Arts Fest 2026-27</title>
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="Logo.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
@@ -19,38 +25,35 @@
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
   --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 html,body{margin:0}
 body{font-family:var(--sans); color:var(--ink); background:var(--bg); min-height:100vh; -webkit-text-size-adjust:100%; line-height:1.45}
 h1,h2,h3{font-family:var(--serif); margin:0}
 button,input,select,textarea{font:inherit; color:inherit}
+button{touch-action:manipulation}
 .wrap{max-width:1000px; margin:0 auto; padding:18px 16px 60px}
+.only-print{display:none}
 
-/* ---------- Hero (login + app header) ---------- */
-.hero{background:var(--hero); color:#fff; border-bottom:4px solid var(--gold); text-align:center; padding:34px 16px 30px}
+/* ---------- Hero ---------- */
+.hero{background:var(--hero); color:#fff; border-bottom:4px solid var(--gold); text-align:center; padding:calc(34px + env(safe-area-inset-top,0px)) 16px 30px}
 .hero .eyebrow{color:var(--gold-l); font-size:.98rem; letter-spacing:.06em; margin-top:16px}
 .hero h1{font-size:clamp(1.8rem,6vw,2.7rem); font-weight:600; margin-top:4px; line-height:1.15}
 .hero p{margin:10px 0 0; font-size:1rem; color:#f3e9e4}
 .hlogo{width:96px; height:96px; border-radius:16px; object-fit:cover; border:3px solid #e9d9b6; background:var(--card); box-shadow:0 4px 14px rgba(0,0,0,.28)}
 .hlogo.big{width:clamp(170px,48vw,230px); height:clamp(170px,48vw,230px); border-radius:22px}
-.hero.compact{text-align:left; padding:22px 16px}
-.hero-in{max-width:1000px; margin:0 auto; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+.hero.compact{text-align:left; padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px}
+.hero-in{max-width:1000px; margin:0 auto; display:flex; align-items:center; gap:18px}
 .hero.compact .eyebrow{margin-top:0; font-size:.86rem}
 .hero.compact h1{font-size:clamp(1.3rem,4.6vw,2rem)}
 .hero.compact h1 span{color:var(--gold-l)}
 .hero.compact p{font-size:.86rem; margin-top:6px; color:#eadfd8}
-.htxt{flex:1; min-width:220px}
-.hact{display:flex; gap:8px; flex-wrap:wrap}
-.hbtn{
-  appearance:none; cursor:pointer; padding:10px 15px; border-radius:10px; font-size:.9rem;
-  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.22); color:#f6ead0;
-}
-.hbtn:hover{background:rgba(255,255,255,.16)}
+.htxt{flex:1; min-width:0}
 .statusbar{background:var(--card); border-bottom:1px solid var(--line); font-size:.86rem; color:var(--muted)}
-.statusbar div{max-width:1000px; margin:0 auto; padding:13px 16px}
-.statusbar b{color:var(--ink); font-weight:600}
-.foot{text-align:center; color:var(--muted); font-size:.82rem; padding:22px 12px}
+.sb-in{max-width:1000px; margin:0 auto; padding:11px 16px; display:flex; justify-content:space-between; align-items:center; gap:8px 14px; flex-wrap:wrap}
+.sb-in b{color:var(--ink); font-weight:600}
+.sb-act{display:flex; gap:14px; flex-wrap:wrap}
+.foot{text-align:center; color:var(--muted); font-size:.82rem; padding:22px 14px calc(22px + env(safe-area-inset-bottom,0px)); line-height:1.6}
 
 /* ---------- Login ---------- */
 #login-view{min-height:100vh; display:flex; flex-direction:column}
@@ -62,14 +65,14 @@ button,input,select,textarea{font:inherit; color:inherit}
 label{display:block; font-size:.8rem; color:var(--muted); font-weight:600; margin-bottom:12px}
 label>input,label>select{display:block; margin-top:5px}
 input[type=text],input[type=email],input[type=password],select,textarea{
-  width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px;
-  background:#fff; color:var(--ink); font-size:1rem; outline:none; font-weight:400;
+  width:100%; padding:12px; border:1px solid var(--line); border-radius:10px; min-height:46px;
+  background:#fff; color:var(--ink); font-size:16px; outline:none; font-weight:400;
 }
 input:focus,select:focus,textarea:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,145,63,.22)}
 select:disabled{opacity:.6}
 textarea{min-height:170px; resize:vertical; line-height:1.5}
 .btn{
-  appearance:none; cursor:pointer; padding:11px 18px; border-radius:10px; font-weight:600;
+  appearance:none; cursor:pointer; padding:12px 18px; border-radius:10px; font-weight:600; min-height:44px;
   background:var(--hero); color:#fff; border:1px solid var(--hero-d); transition:filter .15s, transform .05s;
 }
 .btn:hover{filter:brightness(1.15)} .btn:active{transform:translateY(1px)}
@@ -77,30 +80,39 @@ textarea{min-height:170px; resize:vertical; line-height:1.5}
 .btn.block{width:100%}
 .btn.ghost{background:var(--card); color:var(--ink); border-color:var(--line); font-weight:500}
 .btn.ghost:hover{background:#f7f0df; filter:none}
-.btn.small{padding:7px 12px; font-size:.84rem; border-radius:9px}
+.btn.small{padding:8px 13px; font-size:.85rem; border-radius:9px; min-height:38px}
 .btn.danger{background:var(--bad); border-color:#7d1a21}
 .err{color:var(--bad); font-size:.88rem; min-height:1.2em; margin:6px 0 10px}
-.linkbtn{background:none; border:0; padding:0; color:var(--gold-d); cursor:pointer; font-size:.84rem; font-weight:600}
+.linkbtn{background:none; border:0; padding:4px 0; color:var(--gold-d); cursor:pointer; font-size:.86rem; font-weight:600}
 .linkbtn:hover{text-decoration:underline}
 .badge{display:inline-block; font-size:.68rem; letter-spacing:.07em; text-transform:uppercase; padding:2px 9px; border-radius:99px; background:#f0e2bd; color:#5b4310; font-weight:700; vertical-align:middle}
 .badge.off{background:#e9e3d8; color:var(--muted)}
 .badge.on{background:#d9eddf; color:#1f5a35}
+.cls{color:var(--muted); font-size:.82rem}
+.actions{display:flex; gap:8px; flex-wrap:wrap}
 
-/* ---------- Tabs ---------- */
+/* ---------- Tabs (top on desktop, bottom bar on phones) ---------- */
 .tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:16px; overflow-x:auto}
-.tab{appearance:none; background:transparent; border:0; padding:11px 16px; cursor:pointer; white-space:nowrap; font-family:var(--serif); font-size:1rem; font-weight:600; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-1px}
+.tab{appearance:none; background:transparent; border:0; padding:11px 16px; cursor:pointer; white-space:nowrap; font-family:var(--serif); font-size:1rem; font-weight:600; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-1px; display:inline-flex; align-items:center; gap:8px}
 .tab[aria-selected=true]{color:var(--maroon); border-bottom-color:var(--gold)}
+.tab .ic{width:19px; height:19px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.tab .sm{display:none}
 
 /* ---------- Mark form ---------- */
 .step{margin-bottom:22px}
 .step>h2{font-size:1.02rem; color:var(--maroon); margin-bottom:10px; display:flex; align-items:center; gap:9px}
 .step>h2 .n{width:24px; height:24px; border-radius:50%; background:var(--hero); color:var(--gold-l); display:inline-flex; align-items:center; justify-content:center; font-size:.78rem; font-family:var(--sans); font-weight:700}
 .chips{display:flex; flex-wrap:wrap; gap:8px}
-.chip{appearance:none; cursor:pointer; padding:8px 15px; border-radius:99px; border:1px solid var(--line); background:var(--card); color:var(--ink); font-size:.92rem; transition:background .12s}
+.chip{appearance:none; cursor:pointer; padding:8px 15px; border-radius:99px; border:1px solid var(--line); background:var(--card); color:var(--ink); font-size:.92rem; transition:background .12s; min-height:38px}
 .chip:hover{background:#f7f0df}
 .chip[aria-pressed=true]{background:var(--dark); color:#fff; border-color:var(--dark)}
-.chip.hr{width:48px; height:48px; padding:0; border-radius:50%; font-size:1.05rem; font-weight:600}
-.chip.sug{font-size:.84rem; padding:5px 12px}
+#date-chips{display:grid; grid-template-columns:repeat(8,1fr); gap:8px}
+.chip.dt{border-radius:12px; padding:7px 2px; text-align:center; line-height:1.15}
+.chip.dt small{display:block; font-size:.7rem; opacity:.75}
+.chip.dt b{font-size:.9rem; font-weight:600}
+#hour-chips{display:grid; grid-template-columns:repeat(6,1fr); gap:8px; max-width:460px}
+.chip.hr{height:52px; padding:0; border-radius:14px; font-size:1.1rem; font-weight:600}
+.chip.sug{font-size:.84rem; padding:5px 12px; min-height:34px}
 .chip.sug[aria-pressed=true]{background:var(--teal); border-color:#124a46; color:#fff}
 .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
 .quick{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
@@ -122,26 +134,49 @@ textarea{min-height:170px; resize:vertical; line-height:1.5}
 .strip div{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:7px 4px; text-align:center; font-size:.74rem; color:var(--muted)}
 .strip div b{display:block; font-size:1.1rem; color:var(--teal); font-family:var(--serif)}
 .tools{display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; align-items:center; margin:12px 0 8px}
-.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--card)}
+.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--card); -webkit-overflow-scrolling:touch}
 table{border-collapse:collapse; width:100%; min-width:720px; font-size:.9rem}
 th{font-size:.7rem; letter-spacing:.07em; text-transform:uppercase; text-align:left; color:var(--maroon); background:#f1e9d6; padding:10px; position:sticky; top:0; font-weight:700}
 td{padding:8px 10px; border-top:1px solid var(--line); vertical-align:middle}
 td.hc,th.hc{text-align:center; width:38px; padding-left:2px; padding-right:2px}
 tr:hover td{background:#fbf6e8}
-.cls{color:var(--muted); font-size:.82rem}
 .dot{appearance:none; border:0; background:none; color:var(--teal); font-size:1.05rem; cursor:pointer; padding:2px 6px; border-radius:6px; line-height:1}
 .dot:hover{background:#f7dcdc; color:var(--bad)}
 .dot.ro{color:var(--gold); cursor:default} .dot.ro:hover{background:none; color:var(--gold)}
 .empty{padding:26px; text-align:center; color:var(--muted)}
 .datehead td{background:#efe6cf; font-family:var(--serif); font-weight:600; font-size:.92rem; color:var(--maroon); border-top:1px solid var(--gold-l)}
 
+/* Phone cards for records */
+#rec-cards .dh{font-family:var(--serif); font-weight:600; color:var(--maroon); background:#efe6cf; border-radius:9px; padding:7px 12px; margin:14px 0 8px; font-size:.95rem}
+.rcard{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px}
+.rc-top{display:flex; justify-content:space-between; gap:8px; align-items:baseline}
+.rc-top b{font-size:1rem}
+.rc-hours{display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin:10px 0 8px}
+.hp{height:38px; border-radius:10px; border:1px dashed var(--line); display:flex; align-items:center; justify-content:center; color:#b9b09c; font-size:.9rem; background:transparent; font-family:inherit; padding:0}
+button.hp.on,.hp.on{border:1px solid #124a46; background:var(--teal); color:#fff; font-weight:700}
+button.hp.on{cursor:pointer}
+.hp.on.ro{background:var(--gold); border-color:var(--gold-d); opacity:.85}
+.rc-foot{display:flex; justify-content:space-between; align-items:center; gap:8px}
+
+/* ---------- Reports ---------- */
+.rp-card{background:var(--card); border:1px solid var(--line); border-top:4px solid var(--gold); border-radius:14px; padding:14px; margin-top:14px; box-shadow:0 2px 10px rgba(60,30,20,.05)}
+.rp-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px 14px; flex-wrap:wrap; margin-bottom:10px}
+.rp-head h3{font-size:1.15rem; color:var(--maroon)}
+.rp-card table{min-width:0}
+.rp-card th.hc,.rp-card td.hc{width:auto; min-width:64px; padding:8px 6px; font-size:.86rem}
+.rp-card th.dh small{display:block; font-weight:500; text-transform:none; letter-spacing:0; opacity:.75}
+.rp-card td.nm,.rp-card th.nm{position:sticky; left:0; background:var(--card); min-width:150px; z-index:1}
+.rp-card th.nm{background:#f1e9d6}
+.rp-card tfoot td{background:#f7f0df; font-weight:600; font-size:.84rem}
+.rp-card tfoot td.nm{background:#f7f0df}
+.rp-card td.tt,.rp-card th.tt{text-align:center; font-weight:700; color:var(--maroon)}
+
 /* ---------- Users ---------- */
 .usergrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; align-items:end}
 .usergrid label{margin:0}
 .pwrow{display:flex; gap:6px; margin-top:5px} .pwrow input{margin:0!important}
-.cred{margin-top:12px; padding:12px 14px; border:1px dashed var(--gold); border-radius:10px; background:#fffaf0; font-size:.9rem}
+.cred{margin-top:12px; padding:12px 14px; border:1px dashed var(--gold); border-radius:10px; background:#fffaf0; font-size:.9rem; word-break:break-all}
 .cred code{background:#f1e9d6; padding:1px 6px; border-radius:5px; font-size:.92rem}
-.actions{display:flex; gap:6px; flex-wrap:wrap}
 
 /* ---------- Dialog + toast ---------- */
 dialog{border:1px solid var(--gold); border-top:4px solid var(--gold); border-radius:14px; padding:0; background:var(--card); color:var(--ink); max-width:min(480px,92vw); width:100%; box-shadow:0 20px 60px rgba(40,10,10,.35)}
@@ -156,19 +191,63 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
 .dlg-err{color:var(--bad); font-size:.85rem; min-height:1.1em}
 .dlg-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:6px}
 .toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,30px); opacity:0; pointer-events:none;
-  background:var(--hero); color:#f6ead0; padding:11px 18px; border-radius:10px; font-size:.92rem; transition:.25s; max-width:90vw; z-index:50; border:1px solid var(--gold)}
+  background:var(--hero); color:#f6ead0; padding:11px 18px; border-radius:10px; font-size:.92rem; transition:.25s; max-width:90vw; z-index:80; border:1px solid var(--gold)}
 .toast.show{opacity:1; transform:translate(-50%,0)}
 .toast.bad{background:var(--bad); color:#fff}
 
-@media (max-width:560px){
+/* ---------- Phones ---------- */
+@media (max-width:700px){
+  .wrap{padding:14px 12px calc(100px + env(safe-area-inset-bottom,0px))}
+  .hero.compact{padding:calc(14px + env(safe-area-inset-top,0px)) 14px 14px}
+  .hero-in{gap:12px}
+  .hero.compact .hlogo{width:58px; height:58px; border-radius:12px; border-width:2px}
+  .hero.compact .eyebrow{font-size:.72rem; letter-spacing:.04em}
+  .hero.compact h1{font-size:1.25rem}
+  .hero.compact p{display:none}
+  .panel{padding:14px}
+  #date-chips{grid-template-columns:repeat(4,1fr)}
   .grid3{grid-template-columns:1fr}
-  .hero.compact{text-align:center}
-  .hero-in{justify-content:center}
-  .htxt{flex-basis:100%; order:2}
-  .hact{order:3; justify-content:center}
-  .hlogo{width:84px; height:84px}
   .stat b{font-size:1.3rem}
   .namebox{columns:1}
+  .filters{grid-template-columns:1fr 1fr}
+  .filters label:last-child{grid-column:1/-1}
+  .tabs{position:fixed; left:0; right:0; bottom:0; z-index:40; margin:0; background:var(--card); border-top:1px solid var(--line); border-bottom:0;
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px)); justify-content:space-around; gap:2px; overflow:visible; box-shadow:0 -4px 16px rgba(60,30,20,.1)}
+  .tab{flex:1; flex-direction:column; gap:3px; font-family:var(--sans); font-size:.72rem; padding:7px 2px; border-bottom:0; margin:0; border-radius:10px; justify-content:center}
+  .tab[aria-selected=true]{background:#f3e9cf; color:var(--maroon)}
+  .tab .lg{display:none} .tab .sm{display:inline}
+  .tab .ic{width:22px; height:22px}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  dialog{margin:auto 0 0 0; max-width:100%; width:100%; border-radius:18px 18px 0 0; border-bottom:0}
+  .dlg-card{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  .dlg-actions .btn{flex:1}
+  #review-btn{position:sticky; bottom:calc(78px + env(safe-area-inset-bottom,0px)); z-index:5; box-shadow:0 6px 18px rgba(63,18,25,.35)}
+  .rp-head .actions{width:100%}
+  .rp-head .actions .btn{flex:1}
+}
+
+/* ---------- Print (class advisor reports) ---------- */
+@media print{
+  @page{size:A4 landscape; margin:12mm}
+  body{background:#fff; color:#000}
+  .hero,.statusbar,.tabs,.no-print,.toast,dialog,.wrap>section:not(#tab-reports){display:none!important}
+  #tab-reports{display:block!important}
+  .wrap{padding:0; max-width:none}
+  .only-print{display:block!important}
+  .rp-card{break-after:page; border:0; box-shadow:none; padding:0; margin:0; background:#fff}
+  .rp-card:last-child{break-after:auto}
+  body.printing-one .rp-card:not(.print-target){display:none!important}
+  .rp-head{margin-bottom:6px}
+  .tablewrap{overflow:visible; border:0; background:#fff}
+  table{min-width:0; font-size:11px}
+  th,td{border:1px solid #888!important; padding:4px 6px!important; background:#fff!important; color:#000!important; position:static!important}
+  th{background:#eee!important}
+  .ph{display:flex!important; align-items:center; gap:14px; border-bottom:2px solid #511c24; padding-bottom:8px; margin-bottom:10px}
+  .ph img{width:64px; height:64px; border-radius:8px}
+  .ph .t1{font-size:12px; color:#555} .ph .t2{font-size:20px; font-weight:700; font-family:var(--serif)} .ph .t3{font-size:13px; margin-top:2px}
+  .note{font-size:11px; color:#333; margin:0 0 8px}
+  .sig{display:flex!important; gap:30px; margin-top:34px; font-size:12px}
+  .sig div{flex:1; border-top:1px solid #000; padding-top:4px; text-align:center}
 }
 </style>
 </head>
@@ -185,7 +264,7 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
   <div class="login-body">
     <form class="panel" id="login-form" autocomplete="on">
       <label>Email
-        <input id="email" type="email" inputmode="email" autocomplete="username" required>
+        <input id="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" required>
       </label>
       <label>Password
         <input id="password" type="password" autocomplete="current-password" required>
@@ -194,7 +273,11 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
       <button class="btn block" id="login-btn" type="submit">Sign in</button>
     </form>
   </div>
-  <footer class="foot">Pratibha 2026-27 · Rhythm of Sapta Swaras</footer>
+  <footer class="foot">
+    Tip: add this page to your phone's home screen.<br>
+    iPhone: Share → Add to Home Screen · Android: menu → Install app<br>
+    Pratibha 2026-27 · Rhythm of Sapta Swaras
+  </footer>
 </main>
 
 <!-- ============ APP ============ -->
@@ -207,127 +290,167 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
         <h1>Duty <span>Attendance</span></h1>
         <p>Hour-wise attendance for students on practice, volunteering &amp; decoration duty</p>
       </div>
-      <div class="hact">
-        <button class="hbtn" id="btn-pw" type="button">Change password</button>
-        <button class="hbtn" id="btn-out" type="button">Sign out</button>
-      </div>
     </div>
   </header>
-  <div class="statusbar"><div>Signed in as <b id="who-name"></b> <span class="badge" id="who-role"></span></div></div>
+  <div class="statusbar">
+    <div class="sb-in">
+      <span>Signed in as <b id="who-name"></b> <span class="badge" id="who-role"></span></span>
+      <span class="sb-act">
+        <button class="linkbtn" id="btn-install" type="button" hidden>Install app</button>
+        <button class="linkbtn" id="btn-pw" type="button">Change password</button>
+        <button class="linkbtn" id="btn-out" type="button">Sign out</button>
+      </span>
+    </div>
+  </div>
+
   <div class="wrap">
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="mark" aria-selected="true">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span class="lg">Mark attendance</span><span class="sm">Mark</span>
+      </button>
+      <button class="tab" role="tab" data-tab="records" aria-selected="false">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        <span class="lg">Records</span><span class="sm">Records</span>
+      </button>
+      <button class="tab" role="tab" data-tab="reports" aria-selected="false">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        <span class="lg">Class reports</span><span class="sm">Reports</span>
+      </button>
+      <button class="tab" role="tab" data-tab="users" aria-selected="false" id="tab-users-btn" hidden>
+        <svg class="ic" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="lg">Users</span><span class="sm">Users</span>
+      </button>
+    </nav>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" data-tab="mark" aria-selected="true">Mark attendance</button>
-    <button class="tab" role="tab" data-tab="records" aria-selected="false">Records</button>
-    <button class="tab" role="tab" data-tab="users" aria-selected="false" id="tab-users-btn" hidden>Users</button>
-  </nav>
+    <!-- Mark -->
+    <section id="tab-mark">
+      <div class="panel">
+        <div class="step">
+          <h2><span class="n">1</span>Date</h2>
+          <div id="date-chips"></div>
+        </div>
 
-  <!-- Mark -->
-  <section id="tab-mark">
-    <div class="panel">
-      <div class="step">
-        <h2><span class="n">1</span>Date</h2>
-        <div class="chips" id="date-chips"></div>
+        <div class="step">
+          <h2><span class="n">2</span>Class</h2>
+          <div class="grid3">
+            <label>Course <select id="course"></select></label>
+            <label>Semester <select id="sem"></select></label>
+            <label>Batch <select id="batch"></select></label>
+          </div>
+        </div>
+
+        <div class="step">
+          <h2><span class="n">3</span>Hours away from class</h2>
+          <div id="hour-chips"></div>
+          <div class="quick">
+            <button class="btn ghost small" type="button" data-q="all">All 6</button>
+            <button class="btn ghost small" type="button" data-q="a">Hours 1–3</button>
+            <button class="btn ghost small" type="button" data-q="b">Hours 4–6</button>
+            <button class="btn ghost small" type="button" data-q="none">Clear</button>
+          </div>
+        </div>
+
+        <div class="step">
+          <h2><span class="n">4</span>Students</h2>
+          <textarea id="names" placeholder="One name per line — you can paste a list straight from WhatsApp" spellcheck="false" autocapitalize="words"></textarea>
+          <div class="row"><span id="name-count">0 students</span><button class="linkbtn" id="names-clear" type="button">Clear list</button></div>
+          <div class="sugbox" id="sugbox" hidden>
+            <div class="hd"><span>Seen before in this batch — tap to add</span><button class="linkbtn" id="sug-all" type="button">Add all</button></div>
+            <div class="chips" id="sug-chips"></div>
+          </div>
+        </div>
+
+        <div class="err" id="mark-err" role="alert"></div>
+        <button class="btn block" id="review-btn" type="button">Review &amp; submit</button>
+        <div id="mark-result"></div>
       </div>
+    </section>
 
-      <div class="step">
-        <h2><span class="n">2</span>Class</h2>
-        <div class="grid3">
-          <label>Course <select id="course"></select></label>
-          <label>Semester <select id="sem"></select></label>
-          <label>Batch <select id="batch"></select></label>
+    <!-- Records -->
+    <section id="tab-records" hidden>
+      <div class="panel">
+        <div class="filters">
+          <label>Date <select id="rf-date"></select></label>
+          <label>Hour <select id="rf-hour"></select></label>
+          <label>Course <select id="rf-course"></select></label>
+          <label>Semester / batch <select id="rf-batch"></select></label>
+          <label>Search name <input id="rf-search" type="text" placeholder="Type a name"></label>
         </div>
       </div>
-
-      <div class="step">
-        <h2><span class="n">3</span>Hours away from class</h2>
-        <div class="chips" id="hour-chips"></div>
-        <div class="quick">
-          <button class="btn ghost small" type="button" data-q="all">All 6</button>
-          <button class="btn ghost small" type="button" data-q="a">Hours 1–3</button>
-          <button class="btn ghost small" type="button" data-q="b">Hours 4–6</button>
-          <button class="btn ghost small" type="button" data-q="none">Clear</button>
+      <div class="stats">
+        <div class="stat"><b id="st-students">0</b><span>Students</span></div>
+        <div class="stat"><b id="st-hours">0</b><span>Student-hours</span></div>
+        <div class="stat"><b id="st-batches">0</b><span>Batches</span></div>
+      </div>
+      <div class="strip" id="strip"></div>
+      <div class="tools">
+        <span class="cls" id="rec-note"></span>
+        <div class="actions">
+          <button class="btn ghost small" id="rec-refresh" type="button">Refresh</button>
+          <button class="btn small" id="rec-export" type="button">Export Excel</button>
         </div>
       </div>
+      <div class="tablewrap" id="rec-table">
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Class</th>
+            <th class="hc">1</th><th class="hc">2</th><th class="hc">3</th><th class="hc">4</th><th class="hc">5</th><th class="hc">6</th>
+            <th>Entered by</th><th></th>
+          </tr></thead>
+          <tbody id="rec-body"></tbody>
+        </table>
+      </div>
+      <div id="rec-cards" hidden></div>
+      <p class="cls" style="margin-top:8px">Tap a filled hour to remove just that hour. You can remove your own entries; admins can remove any. For class-wise reports, use the Class reports tab.</p>
+    </section>
 
-      <div class="step">
-        <h2><span class="n">4</span>Students</h2>
-        <textarea id="names" placeholder="One name per line — you can paste a list straight from WhatsApp" spellcheck="false" autocapitalize="words"></textarea>
-        <div class="row"><span id="name-count">0 students</span><button class="linkbtn" id="names-clear" type="button">Clear list</button></div>
-        <div class="sugbox" id="sugbox" hidden>
-          <div class="hd"><span>Seen before in this batch — tap to add</span><button class="linkbtn" id="sug-all" type="button">Add all</button></div>
-          <div class="chips" id="sug-chips"></div>
+    <!-- Class reports -->
+    <section id="tab-reports" hidden>
+      <div class="panel no-print">
+        <div class="filters">
+          <label>From <select id="rp-from"></select></label>
+          <label>To <select id="rp-to"></select></label>
+          <label>Course <select id="rp-course"></select></label>
+          <label>Semester <select id="rp-sem"></select></label>
+          <label>Batch <select id="rp-batch"></select></label>
         </div>
+        <div class="actions" style="margin-top:14px">
+          <button class="btn small" id="rp-xlsx-all" type="button">Download all (Excel)</button>
+          <button class="btn ghost small" id="rp-share-all" type="button" hidden>Share all</button>
+          <button class="btn ghost small" id="rp-print-all" type="button">Print / PDF all</button>
+          <button class="btn ghost small" id="rp-refresh" type="button">Refresh</button>
+        </div>
+        <p class="cls" style="margin:10px 0 0">One report per class, ready for the class advisor. Choose a course and semester to get just those classes, then download, share or save as PDF.</p>
       </div>
+      <div id="rp-list"></div>
+    </section>
 
-      <div class="err" id="mark-err" role="alert"></div>
-      <button class="btn block" id="review-btn" type="button">Review &amp; submit</button>
-      <div id="mark-result"></div>
-    </div>
-  </section>
-
-  <!-- Records -->
-  <section id="tab-records" hidden>
-    <div class="panel">
-      <div class="filters">
-        <label>Date <select id="rf-date"></select></label>
-        <label>Course <select id="rf-course"></select></label>
-        <label>Semester / batch <select id="rf-batch"></select></label>
-        <label>Hour <select id="rf-hour"></select></label>
-        <label>Search name <input id="rf-search" type="text" placeholder="Type a name"></label>
+    <!-- Users -->
+    <section id="tab-users" hidden>
+      <div class="panel">
+        <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:12px">Create account</h2>
+        <div class="usergrid">
+          <label>Name <input id="nu-name" type="text" autocomplete="off"></label>
+          <label>Email <input id="nu-email" type="email" autocomplete="off" autocapitalize="none"></label>
+          <label>Password
+            <div class="pwrow"><input id="nu-pw" type="text" autocomplete="off"><button class="btn ghost small" id="nu-gen" type="button">Generate</button></div>
+          </label>
+          <label>Role
+            <select id="nu-role"><option value="coordinator">Coordinator</option><option value="admin">Admin</option></select>
+          </label>
+          <button class="btn" id="nu-add" type="button">Create</button>
+        </div>
+        <div class="err" id="nu-err" role="alert"></div>
+        <div class="cred" id="nu-cred" hidden></div>
       </div>
-    </div>
-    <div class="stats">
-      <div class="stat"><b id="st-students">0</b><span>Students</span></div>
-      <div class="stat"><b id="st-hours">0</b><span>Student-hours</span></div>
-      <div class="stat"><b id="st-batches">0</b><span>Batches</span></div>
-    </div>
-    <div class="strip" id="strip"></div>
-    <div class="tools">
-      <span class="cls" id="rec-note"></span>
-      <div class="actions">
-        <button class="btn ghost small" id="rec-refresh" type="button">Refresh</button>
-        <button class="btn small" id="rec-export" type="button">Export Excel</button>
+      <div class="tablewrap" style="margin-top:14px">
+        <table style="min-width:640px">
+          <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+          <tbody id="user-body"></tbody>
+        </table>
       </div>
-    </div>
-    <div class="tablewrap">
-      <table>
-        <thead><tr>
-          <th>Name</th><th>Class</th>
-          <th class="hc">1</th><th class="hc">2</th><th class="hc">3</th><th class="hc">4</th><th class="hc">5</th><th class="hc">6</th>
-          <th>Entered by</th><th></th>
-        </tr></thead>
-        <tbody id="rec-body"></tbody>
-      </table>
-    </div>
-    <p class="cls" style="margin-top:8px">Tap a <b style="color:var(--teal)">●</b> to remove a single hour. You can remove your own entries; admins can remove any.</p>
-  </section>
-
-  <!-- Users -->
-  <section id="tab-users" hidden>
-    <div class="panel">
-      <h2 style="font-size:.9rem;color:var(--maroon);margin-bottom:12px">Create account</h2>
-      <div class="usergrid">
-        <label>Name <input id="nu-name" type="text" autocomplete="off"></label>
-        <label>Email <input id="nu-email" type="email" autocomplete="off"></label>
-        <label>Password
-          <div class="pwrow"><input id="nu-pw" type="text" autocomplete="off"><button class="btn ghost small" id="nu-gen" type="button">Generate</button></div>
-        </label>
-        <label>Role
-          <select id="nu-role"><option value="coordinator">Coordinator</option><option value="admin">Admin</option></select>
-        </label>
-        <button class="btn" id="nu-add" type="button">Create</button>
-      </div>
-      <div class="err" id="nu-err" role="alert"></div>
-      <div class="cred" id="nu-cred" hidden></div>
-    </div>
-    <div class="tablewrap" style="margin-top:14px">
-      <table style="min-width:640px">
-        <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
-        <tbody id="user-body"></tbody>
-      </table>
-    </div>
-  </section>
+    </section>
   </div>
 </div>
 
@@ -336,7 +459,7 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
 
 <script>
 /* =====================================================================
-   PASTE your deployed Apps Script web app URL (ends with /exec) below.
+   Your deployed Apps Script web app URL (ends with /exec).
    ===================================================================== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxu0Qqnq0VzK7xkFtKnVQAwRZXaG4EDT_qoQn_Eycn6wgxYWOE9VPL5axCr1wKNXBTRSQ/exec';
 
@@ -354,8 +477,20 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const parseYmd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
 const ymd = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 const fmtDate = s => { const d = parseYmd(s); return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`; };
+const fmtShort = s => { const d = parseYmd(s); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; };
 const dateRange = (a,b) => { const out = []; for (let d = parseYmd(a); d <= parseYmd(b); d.setDate(d.getDate()+1)) out.push(ymd(d)); return out; };
 const uniq = arr => [...new Set(arr)];
+const mq = window.matchMedia('(max-width: 700px)');
+
+// [1,2,3,5] -> "1–3, 5"
+function fmtHours(arr){
+  const a = [...arr].sort((x,y) => x-y), out = [];
+  for (let i = 0; i < a.length;){
+    let j = i; while (j+1 < a.length && a[j+1] === a[j]+1) j++;
+    out.push(j > i ? `${a[i]}–${a[j]}` : `${a[i]}`); i = j+1;
+  }
+  return out.join(', ');
+}
 
 let toastTimer;
 function toast(msg, kind = 'ok'){
@@ -371,7 +506,7 @@ function setBusy(btn, on){
 const state = {
   token: store.get('pa_token'), user: null, cfg: null, batches: [],
   mk: { date: '', course: '', sem: '', batch: '', hours: new Set() },
-  sugCache: {}, recs: [], recsLoaded: false, users: []
+  sugCache: {}, recs: [], recsLoaded: false, users: [], rp: []
 };
 
 /* ---------- API ---------- */
@@ -422,11 +557,12 @@ function modal({ title, message = '', fields = [], confirm = 'OK', cancel = 'Can
 }
 
 /* ---------- auth flow ---------- */
-function show(view){ $('#login-view').hidden = view !== 'login'; $('#app-view').hidden = view !== 'app'; }
+function show(view){ $('#login-view').hidden = view !== 'login'; $('#app-view').hidden = view !== 'app'; window.scrollTo(0, 0); }
 
 function signOut(expired){
   state.token = null; store.del('pa_token');
   state.user = null; state.recs = []; state.recsLoaded = false; state.sugCache = {};
+  if (!expired) store.del('pa_draft');
   $('#password').value = '';
   $('#login-err').textContent = expired ? 'Your session expired. Please sign in again.' : '';
   show('login');
@@ -468,35 +604,47 @@ $('#btn-pw').onclick = async () => {
   } catch (err) { toast(err.message, 'bad'); }
 };
 
+/* ---------- install prompt (Android/desktop Chrome) ---------- */
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; $('#btn-install').hidden = false; });
+$('#btn-install').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt(); await deferredInstall.userChoice.catch(() => {});
+  deferredInstall = null; $('#btn-install').hidden = true;
+};
+
 /* ---------- app shell ---------- */
 function buildApp(){
   $('#who-name').textContent = state.user.name;
-  const rb = $('#who-role'); rb.textContent = state.user.role === 'admin' ? 'Admin' : 'Coordinator';
+  $('#who-role').textContent = state.user.role === 'admin' ? 'Admin' : 'Coordinator';
   $('#tab-users-btn').hidden = state.user.role !== 'admin';
 
-  // Mark form defaults
   const dates = dateRange(state.cfg.dateFrom, state.cfg.dateTo);
   const today = ymd(new Date());
   state.mk = { date: dates.includes(today) ? today : dates[0], course: '', sem: '', batch: '', hours: new Set() };
   renderDateChips(dates); renderHourChips();
-  fillCourse();
-  $('#names').value = ''; updateCount(); $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
-  initRecordFilters(dates);
+  fillCourse(); restoreLast();
+  $('#names').value = store.get('pa_draft') || ''; updateCount();
+  $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
+  initRecordFilters(dates); initReportFilters(dates);
   switchTab('mark');
 }
 
 $$('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
 function switchTab(name){
   $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name));
-  ['mark','records','users'].forEach(n => $('#tab-' + n).hidden = n !== name);
-  if (name === 'records') loadRecords(!state.recsLoaded);
+  ['mark','records','reports','users'].forEach(n => $('#tab-' + n).hidden = n !== name);
+  if (name === 'records' || name === 'reports') loadRecords(!state.recsLoaded);
   if (name === 'users') loadUsers();
+  window.scrollTo(0, 0);
 }
 
 /* ---------- Mark: date + hours ---------- */
 function renderDateChips(dates){
-  $('#date-chips').innerHTML = dates.map(d =>
-    `<button type="button" class="chip" data-d="${d}" aria-pressed="${d === state.mk.date}">${esc(fmtDate(d))}</button>`).join('');
+  $('#date-chips').innerHTML = dates.map(d => {
+    const dt = parseYmd(d);
+    return `<button type="button" class="chip dt" data-d="${d}" aria-pressed="${d === state.mk.date}"><small>${DAYS[dt.getDay()]}</small><b>${dt.getDate()} ${MONTHS[dt.getMonth()]}</b></button>`;
+  }).join('');
   $$('#date-chips .chip').forEach(c => c.onclick = () => {
     state.mk.date = c.dataset.d;
     $$('#date-chips .chip').forEach(x => x.setAttribute('aria-pressed', x === c));
@@ -533,8 +681,7 @@ function fillSelect(sel, items, placeholder){
 }
 function fillCourse(){
   const courses = uniq(state.batches.map(b => b.course));
-  const v = fillSelect($('#course'), courses, 'Select course');
-  $('#course').value = v; onCourse();
+  $('#course').value = fillSelect($('#course'), courses, 'Select course'); onCourse();
 }
 function onCourse(){
   const c = $('#course').value; state.mk.course = c;
@@ -548,7 +695,21 @@ function onSem(){
 }
 function onBatch(){
   state.mk.batch = $('#batch').value;
+  const m = state.mk;
+  if (m.course && m.sem && m.batch) store.set('pa_last', JSON.stringify({ course: m.course, sem: m.sem, batch: m.batch }));
   loadSuggestions();
+}
+// Pre-select the class this person used last time
+function restoreLast(){
+  let last = null; try { last = JSON.parse(store.get('pa_last') || 'null'); } catch(e){}
+  if (!last) return;
+  const has = (sel, v) => [...sel.options].some(o => o.value === v);
+  if (!has($('#course'), last.course)) return;
+  $('#course').value = last.course; onCourse();
+  if (!has($('#sem'), last.sem)) return;
+  $('#sem').value = last.sem; onSem();
+  if (!has($('#batch'), last.batch)) return;
+  $('#batch').value = last.batch; onBatch();
 }
 $('#course').onchange = onCourse; $('#sem').onchange = onSem; $('#batch').onchange = onBatch;
 
@@ -573,8 +734,8 @@ function updateCount(){
   $('#name-count').textContent = `${n} student${n === 1 ? '' : 's'}`;
   syncSuggestions();
 }
-$('#names').addEventListener('input', updateCount);
-$('#names-clear').onclick = () => { $('#names').value = ''; updateCount(); };
+$('#names').addEventListener('input', () => { store.set('pa_draft', $('#names').value); updateCount(); });
+$('#names-clear').onclick = () => { $('#names').value = ''; store.del('pa_draft'); updateCount(); };
 
 const batchKey = () => [state.mk.course, state.mk.sem, state.mk.batch].join('|');
 async function loadSuggestions(){
@@ -587,7 +748,7 @@ async function loadSuggestions(){
       state.sugCache[key] = r.names;
     } catch (e) { state.sugCache[key] = []; }
   }
-  if (key !== batchKey()) return; // selection changed while loading
+  if (key !== batchKey()) return;
   renderSuggestions();
 }
 function renderSuggestions(){
@@ -602,15 +763,16 @@ function syncSuggestions(){
   const list = state.sugCache[batchKey()] || [];
   $$('#sug-chips .chip').forEach(c => c.setAttribute('aria-pressed', cur.has(list[+c.dataset.i].toLowerCase())));
 }
+function setNames(names){ $('#names').value = names.join('\n'); store.set('pa_draft', $('#names').value); updateCount(); }
 function toggleName(n){
   const names = parseNames($('#names').value), i = names.findIndex(x => x.toLowerCase() === n.toLowerCase());
   i >= 0 ? names.splice(i, 1) : names.push(n);
-  $('#names').value = names.join('\n'); updateCount();
+  setNames(names);
 }
 $('#sug-all').onclick = () => {
   const names = parseNames($('#names').value), have = new Set(names.map(n => n.toLowerCase()));
   (state.sugCache[batchKey()] || []).forEach(n => { if (!have.has(n.toLowerCase())) names.push(n); });
-  $('#names').value = names.join('\n'); updateCount();
+  setNames(names);
 };
 
 /* ---------- Mark: review + submit ---------- */
@@ -627,7 +789,7 @@ $('#review-btn').onclick = async () => {
     message: `<table>
         <tr><td>Date</td><td><b>${esc(fmtDate(m.date))}</b></td></tr>
         <tr><td>Class</td><td><b>${esc(m.course)} · ${esc(m.sem)} · ${esc(m.batch)}</b></td></tr>
-        <tr><td>Hours</td><td><b>${hours.join(', ')}</b></td></tr>
+        <tr><td>Hours</td><td><b>${esc(fmtHours(hours))}</b></td></tr>
         <tr><td>Students</td><td><b>${names.length}</b></td></tr>
       </table>
       <div class="namebox">${names.map(n => `<div>${esc(n)}</div>`).join('')}</div>`
@@ -638,16 +800,28 @@ $('#review-btn').onclick = async () => {
   try {
     const r = await api('submit', { date: m.date, course: m.course, semester: m.sem, batch: m.batch, hours, names });
     state.sugCache[batchKey()] = null; state.recsLoaded = false;
-    const dup = r.skipped ? `<br>${r.skipped} entr${r.skipped === 1 ? 'y was' : 'ies were'} already recorded and skipped.` : '';
+    const dup = r.skipped ? `<br>${r.skipped} hour entr${r.skipped === 1 ? 'y was' : 'ies were'} already recorded and skipped.` : '';
     $('#mark-result').innerHTML = `<div class="result ${r.added ? 'ok' : 'warn'}">
       ${r.added ? `Saved ${r.added} hour entr${r.added === 1 ? 'y' : 'ies'} for ${r.students} student${r.students === 1 ? '' : 's'}.` : 'Nothing new to save.'}${dup}</div>`;
-    if (r.added){ $('#names').value = ''; updateCount(); toast('Attendance saved.'); }
+    if (r.added){ $('#names').value = ''; store.del('pa_draft'); updateCount(); toast('Attendance saved.'); }
     loadSuggestions();
   } catch (e) { err.textContent = e.message; }
   finally { setBusy(btn, false); }
 };
 
-/* ---------- Records ---------- */
+/* ---------- Records (data + list) ---------- */
+async function loadRecords(force){
+  if (!force && state.recsLoaded){ renderRecords(); renderReports(); return; }
+  $('#rec-note').textContent = 'Loading…';
+  $('#rp-list').innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    const r = await api('records');
+    state.recs = r.rows.map(a => ({ id: a[0], date: a[1], name: a[2], course: a[3], sem: a[4], batch: a[5], hours: a[6], by: a[7], byName: a[8] }));
+    state.recsLoaded = true;
+    renderRecords(); renderReports();
+  } catch (e) { $('#rec-note').textContent = ''; $('#rp-list').innerHTML = ''; toast(e.message, 'bad'); }
+}
+
 function initRecordFilters(dates){
   $('#rf-date').innerHTML = '<option value="">All dates</option>' + dates.map(d => `<option value="${d}">${esc(fmtDate(d))}</option>`).join('');
   $('#rf-course').innerHTML = '<option value="">All courses</option>' +
@@ -668,115 +842,276 @@ $('#rf-course').onchange = () => { fillBatchFilter(); renderRecords(); };
 $('#rf-search').addEventListener('input', renderRecords);
 $('#rec-refresh').onclick = () => loadRecords(true);
 
-async function loadRecords(force){
-  if (!force && state.recsLoaded) return renderRecords();
-  $('#rec-note').textContent = 'Loading…';
-  try {
-    const r = await api('records');
-    state.recs = r.rows.map(a => ({ id: a[0], date: a[1], name: a[2], course: a[3], sem: a[4], batch: a[5], hour: a[6], by: a[7], byName: a[8] }));
-    state.recsLoaded = true;
-    renderRecords();
-  } catch (e) { $('#rec-note').textContent = ''; toast(e.message, 'bad'); }
-}
-
 function filteredRecs(){
   const d = $('#rf-date').value, c = $('#rf-course').value, sb = $('#rf-batch').value,
         h = $('#rf-hour').value, q = $('#rf-search').value.trim().toLowerCase();
   return state.recs.filter(r =>
     (!d || r.date === d) && (!c || r.course === c) && (!sb || (r.sem + '|' + r.batch) === sb) &&
-    (!h || r.hour === +h) && (!q || r.name.toLowerCase().includes(q)));
+    (!h || r.hours.includes(+h)) && (!q || r.name.toLowerCase().includes(q)));
 }
-function groupRecs(rows){
-  const map = new Map();
-  rows.forEach(r => {
-    const k = [r.date, r.name.toLowerCase(), r.course, r.sem, r.batch].join('|');
-    if (!map.has(k)) map.set(k, { date: r.date, name: r.name, course: r.course, sem: r.sem, batch: r.batch, hours: {} });
-    map.get(k).hours[r.hour] = r;
-  });
-  return [...map.values()].sort((a,b) =>
-    a.date.localeCompare(b.date) || a.course.localeCompare(b.course) || a.sem.localeCompare(b.sem) ||
-    a.batch.localeCompare(b.batch, undefined, {numeric:true}) || a.name.localeCompare(b.name));
-}
+const cmpRec = (a,b) =>
+  a.date.localeCompare(b.date) || a.course.localeCompare(b.course) || a.sem.localeCompare(b.sem) ||
+  a.batch.localeCompare(b.batch, undefined, {numeric:true}) || a.name.localeCompare(b.name);
 const canDel = r => state.user.role === 'admin' || r.by === state.user.email;
 
 function renderRecords(){
-  const rows = filteredRecs(), groups = groupRecs(rows), n = state.cfg.periods;
+  if (!state.user) return;
+  const rows = filteredRecs().sort(cmpRec), n = state.cfg.periods;
 
   $('#st-students').textContent = uniq(rows.map(r => [r.name.toLowerCase(), r.course, r.sem, r.batch].join('|'))).length;
-  $('#st-hours').textContent = rows.length;
+  $('#st-hours').textContent = rows.reduce((s, r) => s + r.hours.length, 0);
   $('#st-batches').textContent = uniq(rows.map(r => [r.course, r.sem, r.batch].join('|'))).length;
-
   $('#strip').innerHTML = Array.from({length: n}, (_,i) =>
-    `<div><b>${rows.filter(r => r.hour === i+1).length}</b>Hour ${i+1}</div>`).join('');
-  $('#rec-note').textContent = state.recs.length ? `${groups.length} student entr${groups.length === 1 ? 'y' : 'ies'} shown` : '';
+    `<div><b>${rows.filter(r => r.hours.includes(i+1)).length}</b>Hour ${i+1}</div>`).join('');
+  $('#rec-note').textContent = state.recsLoaded ? `${rows.length} student entr${rows.length === 1 ? 'y' : 'ies'} shown` : '';
 
-  if (!groups.length){
-    $('#rec-body').innerHTML = `<tr><td colspan="${n + 4}" class="empty">${state.recs.length ? 'No records match these filters.' : 'No attendance recorded yet.'}</td></tr>`;
+  const phone = mq.matches;
+  $('#rec-table').hidden = phone; $('#rec-cards').hidden = !phone;
+  const emptyMsg = state.recs.length ? 'No records match these filters.' : 'No attendance recorded yet.';
+
+  if (phone){
+    if (!rows.length){ $('#rec-cards').innerHTML = `<div class="empty">${emptyMsg}</div>`; return; }
+    let html = '', last = '';
+    rows.forEach(r => {
+      if (r.date !== last){ html += `<div class="dh">${esc(fmtDate(r.date))}</div>`; last = r.date; }
+      const pills = Array.from({length: n}, (_,i) => {
+        const h = i+1;
+        if (!r.hours.includes(h)) return `<span class="hp">${h}</span>`;
+        return canDel(r) ? `<button class="hp on" data-id="${esc(r.id)}" data-h="${h}" aria-label="Remove hour ${h}">${h}</button>`
+                         : `<span class="hp on ro">${h}</span>`;
+      }).join('');
+      html += `<div class="rcard"><div class="rc-top"><b>${esc(r.name)}</b><span class="cls">${esc(r.sem)} · ${esc(r.batch)}</span></div>
+        <div class="cls">${esc(r.course)}</div>
+        <div class="rc-hours">${pills}</div>
+        <div class="rc-foot"><span class="cls">By ${esc(r.byName)}</span>${canDel(r) ? `<button class="btn ghost small rm" data-id="${esc(r.id)}">Remove</button>` : ''}</div></div>`;
+    });
+    $('#rec-cards').innerHTML = html;
     return;
   }
-  let html = '', lastDate = '';
-  groups.forEach(g => {
-    if (g.date !== lastDate){ html += `<tr class="datehead"><td colspan="${n + 4}">${esc(fmtDate(g.date))}</td></tr>`; lastDate = g.date; }
+
+  if (!rows.length){ $('#rec-body').innerHTML = `<tr><td colspan="${n + 4}" class="empty">${emptyMsg}</td></tr>`; return; }
+  let html = '', last = '';
+  rows.forEach(r => {
+    if (r.date !== last){ html += `<tr class="datehead"><td colspan="${n + 4}">${esc(fmtDate(r.date))}</td></tr>`; last = r.date; }
     const cells = Array.from({length: n}, (_,i) => {
-      const r = g.hours[i+1];
-      if (!r) return '<td class="hc"></td>';
+      const h = i+1;
+      if (!r.hours.includes(h)) return '<td class="hc"></td>';
       return `<td class="hc">${canDel(r)
-        ? `<button class="dot" data-id="${esc(r.id)}" title="Remove hour ${i+1}">●</button>`
+        ? `<button class="dot" data-id="${esc(r.id)}" data-h="${h}" title="Remove hour ${h}">●</button>`
         : `<span class="dot ro" title="Entered by ${esc(r.byName)}">●</span>`}</td>`;
     }).join('');
-    const mine = Object.values(g.hours).filter(canDel).map(r => r.id);
-    const by = uniq(Object.values(g.hours).map(r => r.byName)).join(', ');
-    html += `<tr><td>${esc(g.name)}</td><td class="cls">${esc(g.course)} · ${esc(g.sem)} · ${esc(g.batch)}</td>${cells}
-      <td class="cls">${esc(by)}</td>
-      <td>${mine.length ? `<button class="btn ghost small rm" data-ids="${esc(mine.join(','))}" data-name="${esc(g.name)}">Remove</button>` : ''}</td></tr>`;
+    html += `<tr><td>${esc(r.name)}</td><td class="cls">${esc(r.course)} · ${esc(r.sem)} · ${esc(r.batch)}</td>${cells}
+      <td class="cls">${esc(r.byName)}</td>
+      <td>${canDel(r) ? `<button class="btn ghost small rm" data-id="${esc(r.id)}">Remove</button>` : ''}</td></tr>`;
   });
   $('#rec-body').innerHTML = html;
 }
+mq.addEventListener('change', () => { renderRecords(); });
 
-$('#rec-body').addEventListener('click', async e => {
-  const dot = e.target.closest('.dot[data-id]'), rm = e.target.closest('.rm');
-  let ids, msg;
-  if (dot){ ids = [dot.dataset.id]; const r = state.recs.find(x => x.id === ids[0]); msg = `Remove hour ${r.hour} for <b>${esc(r.name)}</b> on ${esc(fmtDate(r.date))}?`; }
-  else if (rm){ ids = rm.dataset.ids.split(','); msg = `Remove all ${ids.length} hour entr${ids.length === 1 ? 'y' : 'ies'} for <b>${esc(rm.dataset.name)}</b>?`; }
-  else return;
-  const ok = await modal({ title: 'Remove attendance', message: msg, confirm: 'Remove', danger: true });
-  if (!ok) return;
-  try {
-    const r = await api('deleteRecords', { ids });
-    const gone = new Set(r.deleted);
-    state.recs = state.recs.filter(x => !gone.has(x.id));
-    renderRecords(); toast(`Removed ${r.deleted.length}.` + (r.denied ? ` ${r.denied} not allowed.` : ''));
-  } catch (err) { toast(err.message, 'bad'); }
-});
+async function onRecClick(e){
+  const rm = e.target.closest('.rm'), hp = e.target.closest('button[data-h][data-id]');
+  if (!rm && !hp) return;
+  const id = (rm || hp).dataset.id, rec = state.recs.find(x => x.id === id);
+  if (!rec) return;
+  if (hp && !rm){
+    const h = +hp.dataset.h;
+    const ok = await modal({ title: 'Remove hour', message: `Remove hour ${h} for <b>${esc(rec.name)}</b> on ${esc(fmtDate(rec.date))}?`, confirm: 'Remove', danger: true });
+    if (!ok) return;
+    try {
+      const r = await api('removeHour', { id, hour: h });
+      if (r.gone) state.recs = state.recs.filter(x => x.id !== id); else rec.hours = r.hours;
+      renderRecords(); renderReports(); toast('Removed.');
+    } catch (err) { toast(err.message, 'bad'); }
+  } else {
+    const ok = await modal({ title: 'Remove attendance', message: `Remove all hours (${esc(fmtHours(rec.hours))}) for <b>${esc(rec.name)}</b> on ${esc(fmtDate(rec.date))}?`, confirm: 'Remove', danger: true });
+    if (!ok) return;
+    try {
+      const r = await api('deleteRecords', { ids: [id] });
+      const gone = new Set(r.deleted);
+      state.recs = state.recs.filter(x => !gone.has(x.id));
+      renderRecords(); renderReports(); toast(r.denied ? 'Not allowed.' : 'Removed.');
+    } catch (err) { toast(err.message, 'bad'); }
+  }
+}
+$('#rec-body').addEventListener('click', onRecClick);
+$('#rec-cards').addEventListener('click', onRecClick);
 
 $('#rec-export').onclick = () => {
   if (typeof XLSX === 'undefined') return toast('Excel library could not load. Check your connection.', 'bad');
-  const rows = filteredRecs(), groups = groupRecs(rows), n = state.cfg.periods;
-  if (!groups.length) return toast('Nothing to export.', 'bad');
+  const rows = filteredRecs().sort(cmpRec), n = state.cfg.periods;
+  if (!rows.length) return toast('Nothing to export.', 'bad');
   const head = ['Date','Name','Course','Sem','Batch', ...Array.from({length:n}, (_,i) => 'H' + (i+1)), 'Total hours', 'Entered by'];
-  const toRow = g => [
-    g.date, g.name, g.course, g.sem, g.batch,
-    ...Array.from({length:n}, (_,i) => g.hours[i+1] ? '✓' : ''),
-    Object.keys(g.hours).length, uniq(Object.values(g.hours).map(r => r.byName)).join(', ')
-  ];
-  const wb = XLSX.utils.book_new();
-  const all = XLSX.utils.aoa_to_sheet([head, ...groups.map(toRow)]);
-  all['!cols'] = [{wch:11},{wch:28},{wch:22},{wch:8},{wch:14}, ...Array(n).fill({wch:4}), {wch:11},{wch:22}];
-  XLSX.utils.book_append_sheet(wb, all, 'All records');
-
-  const used = new Set(['All records']);
-  const byBatch = new Map();
-  groups.forEach(g => { const k = [g.course, g.sem, g.batch].join(' · '); (byBatch.get(k) || byBatch.set(k, []).get(k)).push(g); });
-  byBatch.forEach((list, k) => {
-    let nm = k.replace(/[\\/?*\[\]:]/g, '-').slice(0, 31), i = 2;
-    while (used.has(nm)) nm = nm.slice(0, 28) + ' ' + i++;
-    used.add(nm);
-    const ws = XLSX.utils.aoa_to_sheet([head, ...list.map(toRow)]);
-    ws['!cols'] = all['!cols'];
-    XLSX.utils.book_append_sheet(wb, ws, nm);
-  });
-  XLSX.writeFile(wb, `Pratibha_Duty_Attendance_${ymd(new Date())}.xlsx`);
+  const data = rows.map(r => [r.date, r.name, r.course, r.sem, r.batch,
+    ...Array.from({length:n}, (_,i) => r.hours.includes(i+1) ? '✓' : ''), r.hours.length, r.byName]);
+  const ws = XLSX.utils.aoa_to_sheet([head, ...data]);
+  ws['!cols'] = [{wch:11},{wch:28},{wch:26},{wch:8},{wch:14}, ...Array(n).fill({wch:4}), {wch:11},{wch:22}];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Records');
+  XLSX.writeFile(wb, `Pratibha_Duty_Attendance_Records_${ymd(new Date())}.xlsx`);
 };
+
+/* ---------- Class reports (for class advisors) ---------- */
+function initReportFilters(dates){
+  const opts = dates.map(d => `<option value="${d}">${esc(fmtDate(d))}</option>`).join('');
+  $('#rp-from').innerHTML = opts; $('#rp-to').innerHTML = opts;
+  $('#rp-from').value = dates[0]; $('#rp-to').value = dates[dates.length - 1];
+  $('#rp-course').innerHTML = '<option value="">All courses</option>' +
+    uniq(state.batches.map(b => b.course)).map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  fillRpSem();
+  try { $('#rp-share-all').hidden = !(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.xlsx')] })); } catch (e) {}
+}
+function fillRpSem(){
+  const c = $('#rp-course').value;
+  const sems = uniq(state.batches.filter(b => !c || b.course === c).map(b => b.semester));
+  $('#rp-sem').innerHTML = '<option value="">All semesters</option>' + sems.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  fillRpBatch();
+}
+function fillRpBatch(){
+  const c = $('#rp-course').value, s = $('#rp-sem').value;
+  const bs = uniq(state.batches.filter(b => (!c || b.course === c) && (!s || b.semester === s)).map(b => b.batch));
+  $('#rp-batch').innerHTML = '<option value="">All batches</option>' + bs.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+}
+$('#rp-course').onchange = () => { fillRpSem(); renderReports(); };
+$('#rp-sem').onchange = () => { fillRpBatch(); renderReports(); };
+['#rp-from','#rp-to','#rp-batch'].forEach(s => $(s).onchange = renderReports);
+$('#rp-refresh').onclick = () => loadRecords(true);
+
+const periodText = () => `${fmtShort($('#rp-from').value)} – ${fmtShort($('#rp-to').value)}`;
+
+function buildClassReports(){
+  const from = $('#rp-from').value, to = $('#rp-to').value,
+        c = $('#rp-course').value, s = $('#rp-sem').value, b = $('#rp-batch').value;
+  const order = {}; state.batches.forEach((x, i) => { const k = [x.course, x.semester, x.batch].join('|'); if (!(k in order)) order[k] = i; });
+  const map = new Map();
+  state.recs.forEach(r => {
+    if (r.date < from || r.date > to) return;
+    if ((c && r.course !== c) || (s && r.sem !== s) || (b && r.batch !== b)) return;
+    const k = [r.course, r.sem, r.batch].join('|');
+    if (!map.has(k)) map.set(k, { key: k, course: r.course, sem: r.sem, batch: r.batch, students: new Map(), dates: new Set() });
+    const cl = map.get(k); cl.dates.add(r.date);
+    const sk = r.name.toLowerCase();
+    if (!cl.students.has(sk)) cl.students.set(sk, { name: r.name, byDate: {}, total: 0 });
+    const st = cl.students.get(sk); st.byDate[r.date] = r.hours; st.total += r.hours.length;
+  });
+  return [...map.values()].map(cl => {
+    const dates = [...cl.dates].sort();
+    const students = [...cl.students.values()].sort((x, y) => x.name.localeCompare(y.name));
+    return { key: cl.key, course: cl.course, sem: cl.sem, batch: cl.batch, dates, students,
+             totalHours: students.reduce((a, x) => a + x.total, 0) };
+  }).sort((x, y) => (order[x.key] ?? 9999) - (order[y.key] ?? 9999) || x.key.localeCompare(y.key));
+}
+
+function renderReports(){
+  if (!state.user) return;
+  const list = $('#rp-list');
+  if (!state.recsLoaded){ return; }
+  const classes = state.rp = buildClassReports();
+  const has = classes.length > 0;
+  ['#rp-xlsx-all','#rp-print-all','#rp-share-all'].forEach(s => { if (s !== '#rp-share-all') $(s).disabled = !has; });
+  if (!has){ list.innerHTML = '<div class="panel empty" style="margin-top:14px">No attendance recorded for these filters yet.</div>'; return; }
+  const period = periodText(), canShare = !$('#rp-share-all').hidden;
+
+  list.innerHTML = classes.map((c, i) => `
+    <article class="rp-card" data-i="${i}">
+      <div class="only-print ph">
+        <img src="Logo.png" alt="">
+        <div>
+          <div class="t1">Pratibha Arts Fest 2026-27 · Rhythm of Sapta Swaras</div>
+          <div class="t2">Duty Attendance Report</div>
+          <div class="t3">Class: <b>${esc(c.course)} · ${esc(c.sem)} · ${esc(c.batch)}</b> &nbsp;|&nbsp; Period: <b>${esc(period)}</b></div>
+        </div>
+      </div>
+      <p class="only-print note">The students listed below were on duty for Pratibha Arts Fest (practice / volunteering / decoration) during the hours shown, and may be marked on duty for those hours.</p>
+      <div class="rp-head">
+        <div><h3>${esc(c.course)} · ${esc(c.sem)} · ${esc(c.batch)}</h3>
+          <span class="cls">${c.students.length} student${c.students.length === 1 ? '' : 's'} · ${c.totalHours} student-hours</span></div>
+        <div class="actions no-print">
+          <button class="btn small" data-act="xlsx" data-i="${i}">Excel</button>
+          ${canShare ? `<button class="btn ghost small" data-act="share" data-i="${i}">Share</button>` : ''}
+          <button class="btn ghost small" data-act="print" data-i="${i}">Print / PDF</button>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>#</th><th class="nm">Name</th>
+            ${c.dates.map(d => { const dt = parseYmd(d); return `<th class="hc dh">${dt.getDate()} ${MONTHS[dt.getMonth()]}<small>${DAYS[dt.getDay()]}</small></th>`; }).join('')}
+            <th class="tt">Total hrs</th></tr></thead>
+          <tbody>
+            ${c.students.map((s, j) => `<tr><td>${j + 1}</td><td class="nm">${esc(s.name)}</td>
+              ${c.dates.map(d => `<td class="hc">${s.byDate[d] ? esc(fmtHours(s.byDate[d])) : '<span class="cls">–</span>'}</td>`).join('')}
+              <td class="tt">${s.total}</td></tr>`).join('')}
+          </tbody>
+          <tfoot><tr><td></td><td class="nm">Students on duty</td>
+            ${c.dates.map(d => `<td class="hc">${c.students.filter(s => s.byDate[d]).length}</td>`).join('')}
+            <td class="tt">${c.totalHours}</td></tr></tfoot>
+        </table>
+      </div>
+      <div class="only-print sig"><div>Class Advisor</div><div>Event Coordinator</div><div>Date</div></div>
+    </article>`).join('');
+}
+
+/* report exports */
+const safe = s => String(s).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+function classAoa(c, period){
+  const head = ['Sl. No', 'Name', ...c.dates.map(d => fmtDate(d)), 'Total hours'];
+  const rows = c.students.map((s, i) => [i + 1, s.name, ...c.dates.map(d => s.byDate[d] ? fmtHours(s.byDate[d]) : ''), s.total]);
+  const foot = ['', 'Students on duty', ...c.dates.map(d => c.students.filter(s => s.byDate[d]).length), c.totalHours];
+  return [
+    ['Pratibha Arts Fest 2026-27 · Duty Attendance Report'],
+    [`Class: ${c.course} · ${c.sem} · ${c.batch}`],
+    [`Period: ${period}`],
+    ['Students below were on duty for Pratibha Arts Fest (practice / volunteering / decoration) during the hours shown.'],
+    [],
+    head, ...rows, foot, [], [],
+    ['Class Advisor signature:', '', '', 'Date:']
+  ];
+}
+function sheetName(base, used){
+  let nm = base.replace(/[\\/?*\[\]:]/g, '-').slice(0, 31), i = 2;
+  while (used.has(nm.toLowerCase())) nm = nm.slice(0, 28) + ' ' + i++;
+  used.add(nm.toLowerCase()); return nm;
+}
+async function exportClasses(list, filename, share){
+  if (typeof XLSX === 'undefined') return toast('Excel library could not load. Check your connection.', 'bad');
+  const wb = XLSX.utils.book_new(), used = new Set(), period = periodText();
+  if (list.length > 1){
+    const ws = XLSX.utils.aoa_to_sheet([['Course','Semester','Batch','Students','Student-hours'],
+      ...list.map(c => [c.course, c.sem, c.batch, c.students.length, c.totalHours])]);
+    ws['!cols'] = [{wch:34},{wch:12},{wch:16},{wch:10},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, sheetName('Summary', used));
+  }
+  list.forEach(c => {
+    const ws = XLSX.utils.aoa_to_sheet(classAoa(c, period));
+    ws['!cols'] = [{wch:7},{wch:30}, ...c.dates.map(() => ({wch:14})), {wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, sheetName(`${c.course.slice(0, 15).trim()} ${c.sem} ${c.batch}`, used));
+  });
+  if (share){
+    try {
+      const arr = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const file = new File([arr], filename, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })){ await navigator.share({ files: [file], title: filename }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  XLSX.writeFile(wb, filename);
+}
+function printReports(i){
+  const one = i != null;
+  document.body.classList.toggle('printing-one', one);
+  $$('.rp-card').forEach(c => c.classList.toggle('print-target', one && c.dataset.i === String(i)));
+  window.print();
+}
+$('#rp-list').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const c = state.rp[+b.dataset.i]; if (!c) return;
+  if (b.dataset.act === 'print') printReports(+b.dataset.i);
+  else exportClasses([c], `Duty_Attendance_${safe(c.course)}_${safe(c.sem)}_${safe(c.batch)}.xlsx`, b.dataset.act === 'share');
+});
+function allName(){
+  const c = $('#rp-course').value, s = $('#rp-sem').value;
+  return 'Duty_Attendance_' + [c ? safe(c) : 'All_Classes', s ? safe(s) : ''].filter(Boolean).join('_') + '.xlsx';
+}
+$('#rp-xlsx-all').onclick = () => state.rp.length && exportClasses(state.rp, allName(), false);
+$('#rp-share-all').onclick = () => state.rp.length && exportClasses(state.rp, allName(), true);
+$('#rp-print-all').onclick = () => state.rp.length && printReports(null);
 
 /* ---------- Users (admin) ---------- */
 async function loadUsers(){
@@ -812,7 +1147,7 @@ $('#nu-add').onclick = async () => {
   const btn = $('#nu-add'); setBusy(btn, true);
   try {
     await api('createUser', body);
-    const link = location.href.split('#')[0];
+    const link = location.href.split('#')[0].split('?')[0];
     $('#nu-cred').innerHTML = `Account created. Share these details:<br>
       Link: <code>${esc(link)}</code><br>Email: <code>${esc(body.email.trim().toLowerCase())}</code><br>Password: <code>${esc(body.password)}</code><br>
       <button class="btn ghost small" id="nu-copy" type="button" style="margin-top:8px">Copy</button>`;
@@ -838,7 +1173,7 @@ $('#user-body').addEventListener('click', async e => {
       });
       if (!v) return;
       await api('resetPassword', { email, password: v[0] });
-      await modal({ title: 'Password reset', message: `New password for <b>${esc(email)}</b>:<br><code style="background:#f3e6c6;padding:2px 8px;border-radius:5px;font-size:1rem">${esc(v[0])}</code><br><br>Share it with them — they can change it after signing in.`, confirm: 'Done', cancel: 'Close' });
+      await modal({ title: 'Password reset', message: `New password for <b>${esc(email)}</b>:<br><code style="background:#f1e9d6;padding:2px 8px;border-radius:5px;font-size:1rem">${esc(v[0])}</code><br><br>Share it with them — they can change it after signing in.`, confirm: 'Done', cancel: 'Close' });
     } else if (act === 'toggle'){
       await api('setActive', { email, active: b.dataset.a === '1' });
       toast(b.dataset.a === '1' ? 'Account enabled.' : 'Account disabled.'); loadUsers();
@@ -851,6 +1186,7 @@ $('#user-body').addEventListener('click', async e => {
 });
 
 /* ---------- start ---------- */
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 (async function start(){
   if (state.token){
     try { await boot(); return; } catch (e) { /* fall through to login */ }
