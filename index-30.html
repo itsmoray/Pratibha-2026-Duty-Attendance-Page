@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#511c24">
+<title>Duty Attendance · Pratibha Arts Fest 2026-27</title>
+<link rel="icon" href="Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --hero:#511c24; --hero-d:#3f1219; --maroon:#5a1a26; --maroon-d:#3f1219;
+  --gold:#b8913f; --gold-d:#8a6a1c; --gold-l:#e3c584; --teal:#1e6b66;
+  --bg:#f3efe4; --card:#fffcf7; --ink:#33302b; --muted:#6f6a60; --line:#e3dac6;
+  --ok:#2f7a4b; --bad:#a3262f; --dark:#2b1a1a;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:var(--sans); color:var(--ink); background:var(--bg); min-height:100vh; -webkit-text-size-adjust:100%; line-height:1.45}
+h1,h2,h3{font-family:var(--serif); margin:0}
+button,input,select,textarea{font:inherit; color:inherit}
+.wrap{max-width:1000px; margin:0 auto; padding:18px 16px 60px}
+
+/* ---------- Hero (login + app header) ---------- */
+.hero{background:var(--hero); color:#fff; border-bottom:4px solid var(--gold); text-align:center; padding:34px 16px 30px}
+.hero .eyebrow{color:var(--gold-l); font-size:.98rem; letter-spacing:.06em; margin-top:16px}
+.hero h1{font-size:clamp(1.8rem,6vw,2.7rem); font-weight:600; margin-top:4px; line-height:1.15}
+.hero p{margin:10px 0 0; font-size:1rem; color:#f3e9e4}
+.hlogo{width:96px; height:96px; border-radius:16px; object-fit:cover; border:3px solid #e9d9b6; background:var(--card); box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.hlogo.big{width:clamp(170px,48vw,230px); height:clamp(170px,48vw,230px); border-radius:22px}
+.hero.compact{text-align:left; padding:22px 16px}
+.hero-in{max-width:1000px; margin:0 auto; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+.hero.compact .eyebrow{margin-top:0; font-size:.86rem}
+.hero.compact h1{font-size:clamp(1.3rem,4.6vw,2rem)}
+.hero.compact h1 span{color:var(--gold-l)}
+.hero.compact p{font-size:.86rem; margin-top:6px; color:#eadfd8}
+.htxt{flex:1; min-width:220px}
+.hact{display:flex; gap:8px; flex-wrap:wrap}
+.hbtn{
+  appearance:none; cursor:pointer; padding:10px 15px; border-radius:10px; font-size:.9rem;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.22); color:#f6ead0;
+}
+.hbtn:hover{background:rgba(255,255,255,.16)}
+.statusbar{background:var(--card); border-bottom:1px solid var(--line); font-size:.86rem; color:var(--muted)}
+.statusbar div{max-width:1000px; margin:0 auto; padding:13px 16px}
+.statusbar b{color:var(--ink); font-weight:600}
+.foot{text-align:center; color:var(--muted); font-size:.82rem; padding:22px 12px}
+
+/* ---------- Login ---------- */
+#login-view{min-height:100vh; display:flex; flex-direction:column}
+.login-body{flex:1; display:flex; justify-content:center; align-items:flex-start; padding:26px 16px}
+.login-body .panel{width:100%; max-width:420px}
+
+/* ---------- Cards, forms, buttons ---------- */
+.panel{background:var(--card); border:1px solid var(--line); border-top:4px solid var(--gold); border-radius:14px; box-shadow:0 2px 10px rgba(60,30,20,.06); padding:18px}
+label{display:block; font-size:.8rem; color:var(--muted); font-weight:600; margin-bottom:12px}
+label>input,label>select{display:block; margin-top:5px}
+input[type=text],input[type=email],input[type=password],select,textarea{
+  width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px;
+  background:#fff; color:var(--ink); font-size:1rem; outline:none; font-weight:400;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,145,63,.22)}
+select:disabled{opacity:.6}
+textarea{min-height:170px; resize:vertical; line-height:1.5}
+.btn{
+  appearance:none; cursor:pointer; padding:11px 18px; border-radius:10px; font-weight:600;
+  background:var(--hero); color:#fff; border:1px solid var(--hero-d); transition:filter .15s, transform .05s;
+}
+.btn:hover{filter:brightness(1.15)} .btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.6; cursor:wait}
+.btn.block{width:100%}
+.btn.ghost{background:var(--card); color:var(--ink); border-color:var(--line); font-weight:500}
+.btn.ghost:hover{background:#f7f0df; filter:none}
+.btn.small{padding:7px 12px; font-size:.84rem; border-radius:9px}
+.btn.danger{background:var(--bad); border-color:#7d1a21}
+.err{color:var(--bad); font-size:.88rem; min-height:1.2em; margin:6px 0 10px}
+.linkbtn{background:none; border:0; padding:0; color:var(--gold-d); cursor:pointer; font-size:.84rem; font-weight:600}
+.linkbtn:hover{text-decoration:underline}
+.badge{display:inline-block; font-size:.68rem; letter-spacing:.07em; text-transform:uppercase; padding:2px 9px; border-radius:99px; background:#f0e2bd; color:#5b4310; font-weight:700; vertical-align:middle}
+.badge.off{background:#e9e3d8; color:var(--muted)}
+.badge.on{background:#d9eddf; color:#1f5a35}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:16px; overflow-x:auto}
+.tab{appearance:none; background:transparent; border:0; padding:11px 16px; cursor:pointer; white-space:nowrap; font-family:var(--serif); font-size:1rem; font-weight:600; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-1px}
+.tab[aria-selected=true]{color:var(--maroon); border-bottom-color:var(--gold)}
+
+/* ---------- Mark form ---------- */
+.step{margin-bottom:22px}
+.step>h2{font-size:1.02rem; color:var(--maroon); margin-bottom:10px; display:flex; align-items:center; gap:9px}
+.step>h2 .n{width:24px; height:24px; border-radius:50%; background:var(--hero); color:var(--gold-l); display:inline-flex; align-items:center; justify-content:center; font-size:.78rem; font-family:var(--sans); font-weight:700}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{appearance:none; cursor:pointer; padding:8px 15px; border-radius:99px; border:1px solid var(--line); background:var(--card); color:var(--ink); font-size:.92rem; transition:background .12s}
+.chip:hover{background:#f7f0df}
+.chip[aria-pressed=true]{background:var(--dark); color:#fff; border-color:var(--dark)}
+.chip.hr{width:48px; height:48px; padding:0; border-radius:50%; font-size:1.05rem; font-weight:600}
+.chip.sug{font-size:.84rem; padding:5px 12px}
+.chip.sug[aria-pressed=true]{background:var(--teal); border-color:#124a46; color:#fff}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.quick{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.row{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:6px; font-size:.84rem; color:var(--muted)}
+.sugbox{margin-top:12px}
+.sugbox .hd{display:flex; justify-content:space-between; align-items:center; font-size:.82rem; color:var(--muted); margin-bottom:8px}
+.result{margin-top:14px; padding:12px 14px; border-radius:10px; font-size:.93rem}
+.result.ok{background:#e3f1e6; border:1px solid #b6d8bf; color:#1f5a35}
+.result.warn{background:#fbf0d3; border:1px solid var(--gold-l); color:#6b4c0f}
+
+/* ---------- Records ---------- */
+.filters{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; align-items:end}
+.filters label{margin:0}
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0}
+.stat{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:11px 12px; text-align:center}
+.stat b{display:block; font-family:var(--serif); font-size:1.6rem; color:var(--maroon)}
+.stat span{font-size:.76rem; color:var(--muted)}
+.strip{display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px}
+.strip div{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:7px 4px; text-align:center; font-size:.74rem; color:var(--muted)}
+.strip div b{display:block; font-size:1.1rem; color:var(--teal); font-family:var(--serif)}
+.tools{display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; align-items:center; margin:12px 0 8px}
+.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--card)}
+table{border-collapse:collapse; width:100%; min-width:720px; font-size:.9rem}
+th{font-size:.7rem; letter-spacing:.07em; text-transform:uppercase; text-align:left; color:var(--maroon); background:#f1e9d6; padding:10px; position:sticky; top:0; font-weight:700}
+td{padding:8px 10px; border-top:1px solid var(--line); vertical-align:middle}
+td.hc,th.hc{text-align:center; width:38px; padding-left:2px; padding-right:2px}
+tr:hover td{background:#fbf6e8}
+.cls{color:var(--muted); font-size:.82rem}
+.dot{appearance:none; border:0; background:none; color:var(--teal); font-size:1.05rem; cursor:pointer; padding:2px 6px; border-radius:6px; line-height:1}
+.dot:hover{background:#f7dcdc; color:var(--bad)}
+.dot.ro{color:var(--gold); cursor:default} .dot.ro:hover{background:none; color:var(--gold)}
+.empty{padding:26px; text-align:center; color:var(--muted)}
+.datehead td{background:#efe6cf; font-family:var(--serif); font-weight:600; font-size:.92rem; color:var(--maroon); border-top:1px solid var(--gold-l)}
+
+/* ---------- Users ---------- */
+.usergrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; align-items:end}
+.usergrid label{margin:0}
+.pwrow{display:flex; gap:6px; margin-top:5px} .pwrow input{margin:0!important}
+.cred{margin-top:12px; padding:12px 14px; border:1px dashed var(--gold); border-radius:10px; background:#fffaf0; font-size:.9rem}
+.cred code{background:#f1e9d6; padding:1px 6px; border-radius:5px; font-size:.92rem}
+.actions{display:flex; gap:6px; flex-wrap:wrap}
+
+/* ---------- Dialog + toast ---------- */
+dialog{border:1px solid var(--gold); border-top:4px solid var(--gold); border-radius:14px; padding:0; background:var(--card); color:var(--ink); max-width:min(480px,92vw); width:100%; box-shadow:0 20px 60px rgba(40,10,10,.35)}
+dialog::backdrop{background:rgba(43,26,26,.5)}
+.dlg-card{padding:18px}
+.dlg-card h3{color:var(--maroon); font-size:1.1rem; margin-bottom:10px}
+.dlg-msg{font-size:.92rem; margin-bottom:12px; line-height:1.5}
+.dlg-msg table{min-width:0; font-size:.88rem; width:100%} .dlg-msg td{border-top:0; padding:2px 8px 2px 0; vertical-align:top} .dlg-msg td:first-child{color:var(--muted); white-space:nowrap}
+.dlg-msg tr:hover td{background:none}
+.namebox{max-height:170px; overflow:auto; background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin-top:8px; font-size:.86rem; columns:2; column-gap:18px}
+.namebox div{break-inside:avoid; padding:1px 0}
+.dlg-err{color:var(--bad); font-size:.85rem; min-height:1.1em}
+.dlg-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:6px}
+.toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,30px); opacity:0; pointer-events:none;
+  background:var(--hero); color:#f6ead0; padding:11px 18px; border-radius:10px; font-size:.92rem; transition:.25s; max-width:90vw; z-index:50; border:1px solid var(--gold)}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+.toast.bad{background:var(--bad); color:#fff}
+
+@media (max-width:560px){
+  .grid3{grid-template-columns:1fr}
+  .hero.compact{text-align:center}
+  .hero-in{justify-content:center}
+  .htxt{flex-basis:100%; order:2}
+  .hact{order:3; justify-content:center}
+  .hlogo{width:84px; height:84px}
+  .stat b{font-size:1.3rem}
+  .namebox{columns:1}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<main id="login-view" hidden>
+  <header class="hero">
+    <img class="hlogo big" src="Logo.png" alt="Pratibha Arts Fest">
+    <div class="eyebrow">Pratibha Arts Fest 2026-27 · Rhythm of Sapta Swaras</div>
+    <h1>Duty Attendance</h1>
+    <p>Hour-wise attendance for students on practice, volunteering &amp; decoration duty</p>
+  </header>
+  <div class="login-body">
+    <form class="panel" id="login-form" autocomplete="on">
+      <label>Email
+        <input id="email" type="email" inputmode="email" autocomplete="username" required>
+      </label>
+      <label>Password
+        <input id="password" type="password" autocomplete="current-password" required>
+      </label>
+      <div class="err" id="login-err" role="alert"></div>
+      <button class="btn block" id="login-btn" type="submit">Sign in</button>
+    </form>
+  </div>
+  <footer class="foot">Pratibha 2026-27 · Rhythm of Sapta Swaras</footer>
+</main>
+
+<!-- ============ APP ============ -->
+<div id="app-view" hidden>
+  <header class="hero compact">
+    <div class="hero-in">
+      <img class="hlogo" src="Logo.png" alt="">
+      <div class="htxt">
+        <div class="eyebrow">Pratibha Arts Fest 2026-27 · Rhythm of Sapta Swaras</div>
+        <h1>Duty <span>Attendance</span></h1>
+        <p>Hour-wise attendance for students on practice, volunteering &amp; decoration duty</p>
+      </div>
+      <div class="hact">
+        <button class="hbtn" id="btn-pw" type="button">Change password</button>
+        <button class="hbtn" id="btn-out" type="button">Sign out</button>
+      </div>
+    </div>
+  </header>
+  <div class="statusbar"><div>Signed in as <b id="who-name"></b> <span class="badge" id="who-role"></span></div></div>
+  <div class="wrap">
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="mark" aria-selected="true">Mark attendance</button>
+    <button class="tab" role="tab" data-tab="records" aria-selected="false">Records</button>
+    <button class="tab" role="tab" data-tab="users" aria-selected="false" id="tab-users-btn" hidden>Users</button>
+  </nav>
+
+  <!-- Mark -->
+  <section id="tab-mark">
+    <div class="panel">
+      <div class="step">
+        <h2><span class="n">1</span>Date</h2>
+        <div class="chips" id="date-chips"></div>
+      </div>
+
+      <div class="step">
+        <h2><span class="n">2</span>Class</h2>
+        <div class="grid3">
+          <label>Course <select id="course"></select></label>
+          <label>Semester <select id="sem"></select></label>
+          <label>Batch <select id="batch"></select></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <h2><span class="n">3</span>Hours away from class</h2>
+        <div class="chips" id="hour-chips"></div>
+        <div class="quick">
+          <button class="btn ghost small" type="button" data-q="all">All 6</button>
+          <button class="btn ghost small" type="button" data-q="a">Hours 1–3</button>
+          <button class="btn ghost small" type="button" data-q="b">Hours 4–6</button>
+          <button class="btn ghost small" type="button" data-q="none">Clear</button>
+        </div>
+      </div>
+
+      <div class="step">
+        <h2><span class="n">4</span>Students</h2>
+        <textarea id="names" placeholder="One name per line — you can paste a list straight from WhatsApp" spellcheck="false" autocapitalize="words"></textarea>
+        <div class="row"><span id="name-count">0 students</span><button class="linkbtn" id="names-clear" type="button">Clear list</button></div>
+        <div class="sugbox" id="sugbox" hidden>
+          <div class="hd"><span>Seen before in this batch — tap to add</span><button class="linkbtn" id="sug-all" type="button">Add all</button></div>
+          <div class="chips" id="sug-chips"></div>
+        </div>
+      </div>
+
+      <div class="err" id="mark-err" role="alert"></div>
+      <button class="btn block" id="review-btn" type="button">Review &amp; submit</button>
+      <div id="mark-result"></div>
+    </div>
+  </section>
+
+  <!-- Records -->
+  <section id="tab-records" hidden>
+    <div class="panel">
+      <div class="filters">
+        <label>Date <select id="rf-date"></select></label>
+        <label>Course <select id="rf-course"></select></label>
+        <label>Semester / batch <select id="rf-batch"></select></label>
+        <label>Hour <select id="rf-hour"></select></label>
+        <label>Search name <input id="rf-search" type="text" placeholder="Type a name"></label>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="st-students">0</b><span>Students</span></div>
+      <div class="stat"><b id="st-hours">0</b><span>Student-hours</span></div>
+      <div class="stat"><b id="st-batches">0</b><span>Batches</span></div>
+    </div>
+    <div class="strip" id="strip"></div>
+    <div class="tools">
+      <span class="cls" id="rec-note"></span>
+      <div class="actions">
+        <button class="btn ghost small" id="rec-refresh" type="button">Refresh</button>
+        <button class="btn small" id="rec-export" type="button">Export Excel</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Class</th>
+          <th class="hc">1</th><th class="hc">2</th><th class="hc">3</th><th class="hc">4</th><th class="hc">5</th><th class="hc">6</th>
+          <th>Entered by</th><th></th>
+        </tr></thead>
+        <tbody id="rec-body"></tbody>
+      </table>
+    </div>
+    <p class="cls" style="margin-top:8px">Tap a <b style="color:var(--teal)">●</b> to remove a single hour. You can remove your own entries; admins can remove any.</p>
+  </section>
+
+  <!-- Users -->
+  <section id="tab-users" hidden>
+    <div class="panel">
+      <h2 style="font-size:.9rem;color:var(--maroon);margin-bottom:12px">Create account</h2>
+      <div class="usergrid">
+        <label>Name <input id="nu-name" type="text" autocomplete="off"></label>
+        <label>Email <input id="nu-email" type="email" autocomplete="off"></label>
+        <label>Password
+          <div class="pwrow"><input id="nu-pw" type="text" autocomplete="off"><button class="btn ghost small" id="nu-gen" type="button">Generate</button></div>
+        </label>
+        <label>Role
+          <select id="nu-role"><option value="coordinator">Coordinator</option><option value="admin">Admin</option></select>
+        </label>
+        <button class="btn" id="nu-add" type="button">Create</button>
+      </div>
+      <div class="err" id="nu-err" role="alert"></div>
+      <div class="cred" id="nu-cred" hidden></div>
+    </div>
+    <div class="tablewrap" style="margin-top:14px">
+      <table style="min-width:640px">
+        <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+        <tbody id="user-body"></tbody>
+      </table>
+    </div>
+  </section>
+  </div>
+</div>
+
+<dialog id="dlg"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   PASTE your deployed Apps Script web app URL (ends with /exec) below.
+   ===================================================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxu0Qqnq0VzK7xkFtKnVQAwRZXaG4EDT_qoQn_Eycn6wgxYWOE9VPL5axCr1wKNXBTRSQ/exec';
+
+/* ---------- helpers ---------- */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const parseYmd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const fmtDate = s => { const d = parseYmd(s); return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`; };
+const dateRange = (a,b) => { const out = []; for (let d = parseYmd(a); d <= parseYmd(b); d.setDate(d.getDate()+1)) out.push(ymd(d)); return out; };
+const uniq = arr => [...new Set(arr)];
+
+let toastTimer;
+function toast(msg, kind = 'ok'){
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast show ' + (kind === 'bad' ? 'bad' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast', 3600);
+}
+function setBusy(btn, on){
+  if (on){ btn.dataset.t = btn.textContent; btn.textContent = 'Please wait…'; btn.disabled = true; }
+  else { btn.textContent = btn.dataset.t || btn.textContent; btn.disabled = false; }
+}
+
+/* ---------- state ---------- */
+const state = {
+  token: store.get('pa_token'), user: null, cfg: null, batches: [],
+  mk: { date: '', course: '', sem: '', batch: '', hours: new Set() },
+  sugCache: {}, recs: [], recsLoaded: false, users: []
+};
+
+/* ---------- API ---------- */
+async function api(action, payload = {}){
+  if (API_URL.startsWith('PASTE_')) throw new Error('API_URL is not set in index.html yet.');
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, token: state.token, ...payload })
+    });
+  } catch (e) { throw new Error('Could not reach the server. Check your internet connection.'); }
+  let data;
+  try { data = await res.json(); } catch (e) { throw new Error('Unexpected response from the server.'); }
+  if (!data.ok){
+    if (data.code === 'AUTH') signOut(true);
+    throw new Error(data.error || 'Request failed.');
+  }
+  return data;
+}
+
+/* ---------- modal ---------- */
+function modal({ title, message = '', fields = [], confirm = 'OK', cancel = 'Cancel', danger = false, check }){
+  return new Promise(resolve => {
+    const dlg = $('#dlg'); let done = false;
+    dlg.innerHTML = `<div class="dlg-card"><h3>${esc(title)}</h3>
+      ${message ? `<div class="dlg-msg">${message}</div>` : ''}
+      ${fields.map((f,i) => `<label>${esc(f.label)}<input id="mf${i}" type="${f.type || 'text'}" autocomplete="${f.auto || 'off'}" value="${esc(f.value || '')}"></label>`).join('')}
+      <div class="dlg-err" id="mferr"></div>
+      <div class="dlg-actions">
+        <button type="button" class="btn ghost" id="m-cancel">${esc(cancel)}</button>
+        <button type="button" class="btn ${danger ? 'danger' : ''}" id="m-ok">${esc(confirm)}</button>
+      </div></div>`;
+    dlg.addEventListener('close', () => { if (!done){ done = true; resolve(null); } }, { once: true });
+    $('#m-cancel', dlg).onclick = () => dlg.close();
+    $('#m-ok', dlg).onclick = () => {
+      const vals = fields.map((f,i) => $('#mf' + i, dlg).value);
+      const bad = fields.findIndex((f,i) => f.required && !vals[i]);
+      if (bad >= 0){ $('#mferr', dlg).textContent = `Enter ${fields[bad].label.toLowerCase()}.`; return; }
+      const msg = check && check(vals);
+      if (msg){ $('#mferr', dlg).textContent = msg; return; }
+      done = true; dlg.close(); resolve(vals.length ? vals : true);
+    };
+    dlg.showModal();
+    const first = $('input', dlg); if (first) first.focus();
+  });
+}
+
+/* ---------- auth flow ---------- */
+function show(view){ $('#login-view').hidden = view !== 'login'; $('#app-view').hidden = view !== 'app'; }
+
+function signOut(expired){
+  state.token = null; store.del('pa_token');
+  state.user = null; state.recs = []; state.recsLoaded = false; state.sugCache = {};
+  $('#password').value = '';
+  $('#login-err').textContent = expired ? 'Your session expired. Please sign in again.' : '';
+  show('login');
+}
+
+$('#login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('#login-btn'); setBusy(btn, true); $('#login-err').textContent = '';
+  try {
+    const r = await api('login', { email: $('#email').value.trim(), password: $('#password').value });
+    state.token = r.token; store.set('pa_token', r.token);
+    await boot();
+  } catch (err) { $('#login-err').textContent = err.message; }
+  finally { setBusy(btn, false); }
+});
+$('#btn-out').onclick = () => signOut(false);
+
+async function boot(){
+  const r = await api('init');
+  state.user = r.user; state.cfg = r.config; state.batches = r.batches;
+  buildApp(); show('app');
+}
+
+$('#btn-pw').onclick = async () => {
+  const v = await modal({
+    title: 'Change password', confirm: 'Update',
+    fields: [
+      { label: 'Current password', type: 'password', required: true, auto: 'current-password' },
+      { label: 'New password (min 6 characters)', type: 'password', required: true, auto: 'new-password' },
+      { label: 'Repeat new password', type: 'password', required: true, auto: 'new-password' }
+    ],
+    check: v => v[1].length < 6 ? 'New password must be at least 6 characters.' : (v[1] !== v[2] ? 'The new passwords do not match.' : '')
+  });
+  if (!v) return;
+  try {
+    const r = await api('changePassword', { oldPassword: v[0], newPassword: v[1] });
+    state.token = r.token; store.set('pa_token', r.token);
+    toast('Password updated.');
+  } catch (err) { toast(err.message, 'bad'); }
+};
+
+/* ---------- app shell ---------- */
+function buildApp(){
+  $('#who-name').textContent = state.user.name;
+  const rb = $('#who-role'); rb.textContent = state.user.role === 'admin' ? 'Admin' : 'Coordinator';
+  $('#tab-users-btn').hidden = state.user.role !== 'admin';
+
+  // Mark form defaults
+  const dates = dateRange(state.cfg.dateFrom, state.cfg.dateTo);
+  const today = ymd(new Date());
+  state.mk = { date: dates.includes(today) ? today : dates[0], course: '', sem: '', batch: '', hours: new Set() };
+  renderDateChips(dates); renderHourChips();
+  fillCourse();
+  $('#names').value = ''; updateCount(); $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
+  initRecordFilters(dates);
+  switchTab('mark');
+}
+
+$$('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
+function switchTab(name){
+  $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name));
+  ['mark','records','users'].forEach(n => $('#tab-' + n).hidden = n !== name);
+  if (name === 'records') loadRecords(!state.recsLoaded);
+  if (name === 'users') loadUsers();
+}
+
+/* ---------- Mark: date + hours ---------- */
+function renderDateChips(dates){
+  $('#date-chips').innerHTML = dates.map(d =>
+    `<button type="button" class="chip" data-d="${d}" aria-pressed="${d === state.mk.date}">${esc(fmtDate(d))}</button>`).join('');
+  $$('#date-chips .chip').forEach(c => c.onclick = () => {
+    state.mk.date = c.dataset.d;
+    $$('#date-chips .chip').forEach(x => x.setAttribute('aria-pressed', x === c));
+  });
+}
+function renderHourChips(){
+  const n = state.cfg.periods;
+  $('#hour-chips').innerHTML = Array.from({length:n}, (_,i) =>
+    `<button type="button" class="chip hr" data-h="${i+1}" aria-pressed="false" aria-label="Hour ${i+1}">${i+1}</button>`).join('');
+  $$('#hour-chips .chip').forEach(c => c.onclick = () => {
+    const h = +c.dataset.h;
+    state.mk.hours.has(h) ? state.mk.hours.delete(h) : state.mk.hours.add(h);
+    syncHours();
+  });
+}
+function syncHours(){
+  $$('#hour-chips .chip').forEach(c => c.setAttribute('aria-pressed', state.mk.hours.has(+c.dataset.h)));
+}
+$$('[data-q]').forEach(b => b.onclick = () => {
+  const n = state.cfg.periods, q = b.dataset.q, s = new Set();
+  if (q === 'all') for (let i = 1; i <= n; i++) s.add(i);
+  if (q === 'a') [1,2,3].forEach(i => s.add(i));
+  if (q === 'b') [4,5,6].forEach(i => s.add(i));
+  state.mk.hours = s; syncHours();
+});
+
+/* ---------- Mark: class selects ---------- */
+function fillSelect(sel, items, placeholder){
+  sel.innerHTML = (items.length === 1 ? '' : `<option value="">${esc(placeholder)}</option>`) +
+    items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  sel.disabled = items.length === 0;
+  if (items.length === 1) sel.value = items[0];
+  return items.length === 1 ? items[0] : '';
+}
+function fillCourse(){
+  const courses = uniq(state.batches.map(b => b.course));
+  const v = fillSelect($('#course'), courses, 'Select course');
+  $('#course').value = v; onCourse();
+}
+function onCourse(){
+  const c = $('#course').value; state.mk.course = c;
+  const sems = uniq(state.batches.filter(b => b.course === c).map(b => b.semester));
+  $('#sem').value = fillSelect($('#sem'), c ? sems : [], 'Select semester'); onSem();
+}
+function onSem(){
+  const c = state.mk.course, s = $('#sem').value; state.mk.sem = s;
+  const bs = uniq(state.batches.filter(b => b.course === c && b.semester === s).map(b => b.batch));
+  $('#batch').value = fillSelect($('#batch'), s ? bs : [], 'Select batch'); onBatch();
+}
+function onBatch(){
+  state.mk.batch = $('#batch').value;
+  loadSuggestions();
+}
+$('#course').onchange = onCourse; $('#sem').onchange = onSem; $('#batch').onchange = onBatch;
+
+/* ---------- Mark: names ---------- */
+function cleanName(s){
+  s = s.replace(/^\s*(?:\d+\s*[.)\-:]|[-•*·])\s*/, '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  if (s === s.toUpperCase() || s === s.toLowerCase())
+    s = s.toLowerCase().replace(/(^|[\s.'-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
+  return s.slice(0, 80);
+}
+function parseNames(text){
+  const seen = new Set(), out = [];
+  text.split(/[\n;]+/).forEach(l => {
+    const n = cleanName(l);
+    if (n && !seen.has(n.toLowerCase())){ seen.add(n.toLowerCase()); out.push(n); }
+  });
+  return out;
+}
+function updateCount(){
+  const n = parseNames($('#names').value).length;
+  $('#name-count').textContent = `${n} student${n === 1 ? '' : 's'}`;
+  syncSuggestions();
+}
+$('#names').addEventListener('input', updateCount);
+$('#names-clear').onclick = () => { $('#names').value = ''; updateCount(); };
+
+const batchKey = () => [state.mk.course, state.mk.sem, state.mk.batch].join('|');
+async function loadSuggestions(){
+  const box = $('#sugbox'); const m = state.mk;
+  if (!m.course || !m.sem || !m.batch){ box.hidden = true; $('#sug-chips').innerHTML = ''; return; }
+  const key = batchKey();
+  if (!state.sugCache[key]){
+    try {
+      const r = await api('suggest', { course: m.course, semester: m.sem, batch: m.batch });
+      state.sugCache[key] = r.names;
+    } catch (e) { state.sugCache[key] = []; }
+  }
+  if (key !== batchKey()) return; // selection changed while loading
+  renderSuggestions();
+}
+function renderSuggestions(){
+  const list = state.sugCache[batchKey()] || [];
+  $('#sugbox').hidden = list.length === 0;
+  $('#sug-chips').innerHTML = list.map((n, i) => `<button type="button" class="chip sug" data-i="${i}" aria-pressed="false">${esc(n)}</button>`).join('');
+  $$('#sug-chips .chip').forEach(c => c.onclick = () => toggleName(list[+c.dataset.i]));
+  syncSuggestions();
+}
+function syncSuggestions(){
+  const cur = new Set(parseNames($('#names').value).map(n => n.toLowerCase()));
+  const list = state.sugCache[batchKey()] || [];
+  $$('#sug-chips .chip').forEach(c => c.setAttribute('aria-pressed', cur.has(list[+c.dataset.i].toLowerCase())));
+}
+function toggleName(n){
+  const names = parseNames($('#names').value), i = names.findIndex(x => x.toLowerCase() === n.toLowerCase());
+  i >= 0 ? names.splice(i, 1) : names.push(n);
+  $('#names').value = names.join('\n'); updateCount();
+}
+$('#sug-all').onclick = () => {
+  const names = parseNames($('#names').value), have = new Set(names.map(n => n.toLowerCase()));
+  (state.sugCache[batchKey()] || []).forEach(n => { if (!have.has(n.toLowerCase())) names.push(n); });
+  $('#names').value = names.join('\n'); updateCount();
+};
+
+/* ---------- Mark: review + submit ---------- */
+$('#review-btn').onclick = async () => {
+  const m = state.mk, err = $('#mark-err'); err.textContent = ''; $('#mark-result').innerHTML = '';
+  const names = parseNames($('#names').value), hours = [...m.hours].sort((a,b) => a-b);
+  if (!m.date) return err.textContent = 'Pick a date.';
+  if (!m.course || !m.sem || !m.batch) return err.textContent = 'Select the course, semester and batch.';
+  if (!hours.length) return err.textContent = 'Select at least one hour.';
+  if (!names.length) return err.textContent = 'Enter at least one student name.';
+
+  const ok = await modal({
+    title: 'Review attendance', confirm: 'Submit attendance',
+    message: `<table>
+        <tr><td>Date</td><td><b>${esc(fmtDate(m.date))}</b></td></tr>
+        <tr><td>Class</td><td><b>${esc(m.course)} · ${esc(m.sem)} · ${esc(m.batch)}</b></td></tr>
+        <tr><td>Hours</td><td><b>${hours.join(', ')}</b></td></tr>
+        <tr><td>Students</td><td><b>${names.length}</b></td></tr>
+      </table>
+      <div class="namebox">${names.map(n => `<div>${esc(n)}</div>`).join('')}</div>`
+  });
+  if (!ok) return;
+
+  const btn = $('#review-btn'); setBusy(btn, true);
+  try {
+    const r = await api('submit', { date: m.date, course: m.course, semester: m.sem, batch: m.batch, hours, names });
+    state.sugCache[batchKey()] = null; state.recsLoaded = false;
+    const dup = r.skipped ? `<br>${r.skipped} entr${r.skipped === 1 ? 'y was' : 'ies were'} already recorded and skipped.` : '';
+    $('#mark-result').innerHTML = `<div class="result ${r.added ? 'ok' : 'warn'}">
+      ${r.added ? `Saved ${r.added} hour entr${r.added === 1 ? 'y' : 'ies'} for ${r.students} student${r.students === 1 ? '' : 's'}.` : 'Nothing new to save.'}${dup}</div>`;
+    if (r.added){ $('#names').value = ''; updateCount(); toast('Attendance saved.'); }
+    loadSuggestions();
+  } catch (e) { err.textContent = e.message; }
+  finally { setBusy(btn, false); }
+};
+
+/* ---------- Records ---------- */
+function initRecordFilters(dates){
+  $('#rf-date').innerHTML = '<option value="">All dates</option>' + dates.map(d => `<option value="${d}">${esc(fmtDate(d))}</option>`).join('');
+  $('#rf-course').innerHTML = '<option value="">All courses</option>' +
+    uniq(state.batches.map(b => b.course)).map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  $('#rf-hour').innerHTML = '<option value="">All hours</option>' +
+    Array.from({length: state.cfg.periods}, (_,i) => `<option value="${i+1}">Hour ${i+1}</option>`).join('');
+  $('#rf-search').value = '';
+  fillBatchFilter();
+}
+function fillBatchFilter(){
+  const c = $('#rf-course').value;
+  const opts = uniq(state.batches.filter(b => !c || b.course === c).map(b => b.semester + '|' + b.batch));
+  $('#rf-batch').innerHTML = '<option value="">All semesters / batches</option>' +
+    opts.map(o => { const [s, b] = o.split('|'); return `<option value="${esc(o)}">${esc(s)} · ${esc(b)}</option>`; }).join('');
+}
+$('#rf-course').onchange = () => { fillBatchFilter(); renderRecords(); };
+['#rf-date','#rf-batch','#rf-hour'].forEach(s => $(s).onchange = renderRecords);
+$('#rf-search').addEventListener('input', renderRecords);
+$('#rec-refresh').onclick = () => loadRecords(true);
+
+async function loadRecords(force){
+  if (!force && state.recsLoaded) return renderRecords();
+  $('#rec-note').textContent = 'Loading…';
+  try {
+    const r = await api('records');
+    state.recs = r.rows.map(a => ({ id: a[0], date: a[1], name: a[2], course: a[3], sem: a[4], batch: a[5], hour: a[6], by: a[7], byName: a[8] }));
+    state.recsLoaded = true;
+    renderRecords();
+  } catch (e) { $('#rec-note').textContent = ''; toast(e.message, 'bad'); }
+}
+
+function filteredRecs(){
+  const d = $('#rf-date').value, c = $('#rf-course').value, sb = $('#rf-batch').value,
+        h = $('#rf-hour').value, q = $('#rf-search').value.trim().toLowerCase();
+  return state.recs.filter(r =>
+    (!d || r.date === d) && (!c || r.course === c) && (!sb || (r.sem + '|' + r.batch) === sb) &&
+    (!h || r.hour === +h) && (!q || r.name.toLowerCase().includes(q)));
+}
+function groupRecs(rows){
+  const map = new Map();
+  rows.forEach(r => {
+    const k = [r.date, r.name.toLowerCase(), r.course, r.sem, r.batch].join('|');
+    if (!map.has(k)) map.set(k, { date: r.date, name: r.name, course: r.course, sem: r.sem, batch: r.batch, hours: {} });
+    map.get(k).hours[r.hour] = r;
+  });
+  return [...map.values()].sort((a,b) =>
+    a.date.localeCompare(b.date) || a.course.localeCompare(b.course) || a.sem.localeCompare(b.sem) ||
+    a.batch.localeCompare(b.batch, undefined, {numeric:true}) || a.name.localeCompare(b.name));
+}
+const canDel = r => state.user.role === 'admin' || r.by === state.user.email;
+
+function renderRecords(){
+  const rows = filteredRecs(), groups = groupRecs(rows), n = state.cfg.periods;
+
+  $('#st-students').textContent = uniq(rows.map(r => [r.name.toLowerCase(), r.course, r.sem, r.batch].join('|'))).length;
+  $('#st-hours').textContent = rows.length;
+  $('#st-batches').textContent = uniq(rows.map(r => [r.course, r.sem, r.batch].join('|'))).length;
+
+  $('#strip').innerHTML = Array.from({length: n}, (_,i) =>
+    `<div><b>${rows.filter(r => r.hour === i+1).length}</b>Hour ${i+1}</div>`).join('');
+  $('#rec-note').textContent = state.recs.length ? `${groups.length} student entr${groups.length === 1 ? 'y' : 'ies'} shown` : '';
+
+  if (!groups.length){
+    $('#rec-body').innerHTML = `<tr><td colspan="${n + 4}" class="empty">${state.recs.length ? 'No records match these filters.' : 'No attendance recorded yet.'}</td></tr>`;
+    return;
+  }
+  let html = '', lastDate = '';
+  groups.forEach(g => {
+    if (g.date !== lastDate){ html += `<tr class="datehead"><td colspan="${n + 4}">${esc(fmtDate(g.date))}</td></tr>`; lastDate = g.date; }
+    const cells = Array.from({length: n}, (_,i) => {
+      const r = g.hours[i+1];
+      if (!r) return '<td class="hc"></td>';
+      return `<td class="hc">${canDel(r)
+        ? `<button class="dot" data-id="${esc(r.id)}" title="Remove hour ${i+1}">●</button>`
+        : `<span class="dot ro" title="Entered by ${esc(r.byName)}">●</span>`}</td>`;
+    }).join('');
+    const mine = Object.values(g.hours).filter(canDel).map(r => r.id);
+    const by = uniq(Object.values(g.hours).map(r => r.byName)).join(', ');
+    html += `<tr><td>${esc(g.name)}</td><td class="cls">${esc(g.course)} · ${esc(g.sem)} · ${esc(g.batch)}</td>${cells}
+      <td class="cls">${esc(by)}</td>
+      <td>${mine.length ? `<button class="btn ghost small rm" data-ids="${esc(mine.join(','))}" data-name="${esc(g.name)}">Remove</button>` : ''}</td></tr>`;
+  });
+  $('#rec-body').innerHTML = html;
+}
+
+$('#rec-body').addEventListener('click', async e => {
+  const dot = e.target.closest('.dot[data-id]'), rm = e.target.closest('.rm');
+  let ids, msg;
+  if (dot){ ids = [dot.dataset.id]; const r = state.recs.find(x => x.id === ids[0]); msg = `Remove hour ${r.hour} for <b>${esc(r.name)}</b> on ${esc(fmtDate(r.date))}?`; }
+  else if (rm){ ids = rm.dataset.ids.split(','); msg = `Remove all ${ids.length} hour entr${ids.length === 1 ? 'y' : 'ies'} for <b>${esc(rm.dataset.name)}</b>?`; }
+  else return;
+  const ok = await modal({ title: 'Remove attendance', message: msg, confirm: 'Remove', danger: true });
+  if (!ok) return;
+  try {
+    const r = await api('deleteRecords', { ids });
+    const gone = new Set(r.deleted);
+    state.recs = state.recs.filter(x => !gone.has(x.id));
+    renderRecords(); toast(`Removed ${r.deleted.length}.` + (r.denied ? ` ${r.denied} not allowed.` : ''));
+  } catch (err) { toast(err.message, 'bad'); }
+});
+
+$('#rec-export').onclick = () => {
+  if (typeof XLSX === 'undefined') return toast('Excel library could not load. Check your connection.', 'bad');
+  const rows = filteredRecs(), groups = groupRecs(rows), n = state.cfg.periods;
+  if (!groups.length) return toast('Nothing to export.', 'bad');
+  const head = ['Date','Name','Course','Sem','Batch', ...Array.from({length:n}, (_,i) => 'H' + (i+1)), 'Total hours', 'Entered by'];
+  const toRow = g => [
+    g.date, g.name, g.course, g.sem, g.batch,
+    ...Array.from({length:n}, (_,i) => g.hours[i+1] ? '✓' : ''),
+    Object.keys(g.hours).length, uniq(Object.values(g.hours).map(r => r.byName)).join(', ')
+  ];
+  const wb = XLSX.utils.book_new();
+  const all = XLSX.utils.aoa_to_sheet([head, ...groups.map(toRow)]);
+  all['!cols'] = [{wch:11},{wch:28},{wch:22},{wch:8},{wch:14}, ...Array(n).fill({wch:4}), {wch:11},{wch:22}];
+  XLSX.utils.book_append_sheet(wb, all, 'All records');
+
+  const used = new Set(['All records']);
+  const byBatch = new Map();
+  groups.forEach(g => { const k = [g.course, g.sem, g.batch].join(' · '); (byBatch.get(k) || byBatch.set(k, []).get(k)).push(g); });
+  byBatch.forEach((list, k) => {
+    let nm = k.replace(/[\\/?*\[\]:]/g, '-').slice(0, 31), i = 2;
+    while (used.has(nm)) nm = nm.slice(0, 28) + ' ' + i++;
+    used.add(nm);
+    const ws = XLSX.utils.aoa_to_sheet([head, ...list.map(toRow)]);
+    ws['!cols'] = all['!cols'];
+    XLSX.utils.book_append_sheet(wb, ws, nm);
+  });
+  XLSX.writeFile(wb, `Pratibha_Duty_Attendance_${ymd(new Date())}.xlsx`);
+};
+
+/* ---------- Users (admin) ---------- */
+async function loadUsers(){
+  if (state.user.role !== 'admin') return;
+  try { const r = await api('listUsers'); state.users = r.users; renderUsers(); }
+  catch (e) { toast(e.message, 'bad'); }
+}
+function renderUsers(){
+  $('#user-body').innerHTML = state.users.map(u => {
+    const me = u.email === state.user.email;
+    const last = u.last ? new Date(u.last).toLocaleString([], { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+    return `<tr>
+      <td>${esc(u.name)}<div class="cls">${esc(u.email)}</div></td>
+      <td>${u.role === 'admin' ? '<span class="badge">Admin</span>' : 'Coordinator'}</td>
+      <td><span class="badge ${u.active ? 'on' : 'off'}">${u.active ? 'Active' : 'Disabled'}</span></td>
+      <td class="cls">${esc(last)}</td>
+      <td>${me ? '<span class="cls">You</span>' : `<div class="actions">
+        <button class="btn ghost small" data-act="reset" data-e="${esc(u.email)}">Reset password</button>
+        <button class="btn ghost small" data-act="toggle" data-e="${esc(u.email)}" data-a="${u.active ? 0 : 1}">${u.active ? 'Disable' : 'Enable'}</button>
+        <button class="btn ghost small" data-act="del" data-e="${esc(u.email)}">Delete</button></div>`}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="empty">No accounts.</td></tr>';
+}
+function genPassword(){
+  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const a = new Uint32Array(9); crypto.getRandomValues(a);
+  return [...a].map(x => chars[x % chars.length]).join('');
+}
+$('#nu-gen').onclick = () => { $('#nu-pw').value = genPassword(); };
+$('#nu-add').onclick = async () => {
+  const err = $('#nu-err'); err.textContent = ''; $('#nu-cred').hidden = true;
+  const body = { name: $('#nu-name').value, email: $('#nu-email').value, password: $('#nu-pw').value, role: $('#nu-role').value };
+  const btn = $('#nu-add'); setBusy(btn, true);
+  try {
+    await api('createUser', body);
+    const link = location.href.split('#')[0];
+    $('#nu-cred').innerHTML = `Account created. Share these details:<br>
+      Link: <code>${esc(link)}</code><br>Email: <code>${esc(body.email.trim().toLowerCase())}</code><br>Password: <code>${esc(body.password)}</code><br>
+      <button class="btn ghost small" id="nu-copy" type="button" style="margin-top:8px">Copy</button>`;
+    $('#nu-cred').hidden = false;
+    $('#nu-copy').onclick = async () => {
+      const txt = `Pratibha duty attendance\n${link}\nEmail: ${body.email.trim().toLowerCase()}\nPassword: ${body.password}`;
+      try { await navigator.clipboard.writeText(txt); toast('Copied.'); } catch (e) { toast('Copy failed — select the text manually.', 'bad'); }
+    };
+    ['#nu-name','#nu-email','#nu-pw'].forEach(s => $(s).value = '');
+    loadUsers();
+  } catch (e) { err.textContent = e.message; }
+  finally { setBusy(btn, false); }
+};
+$('#user-body').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const email = b.dataset.e, act = b.dataset.act;
+  try {
+    if (act === 'reset'){
+      const v = await modal({
+        title: 'Reset password', message: `New password for <b>${esc(email)}</b>`, confirm: 'Reset',
+        fields: [{ label: 'New password (min 6 characters)', value: genPassword(), required: true }],
+        check: v => v[0].length < 6 ? 'Password must be at least 6 characters.' : ''
+      });
+      if (!v) return;
+      await api('resetPassword', { email, password: v[0] });
+      await modal({ title: 'Password reset', message: `New password for <b>${esc(email)}</b>:<br><code style="background:#f3e6c6;padding:2px 8px;border-radius:5px;font-size:1rem">${esc(v[0])}</code><br><br>Share it with them — they can change it after signing in.`, confirm: 'Done', cancel: 'Close' });
+    } else if (act === 'toggle'){
+      await api('setActive', { email, active: b.dataset.a === '1' });
+      toast(b.dataset.a === '1' ? 'Account enabled.' : 'Account disabled.'); loadUsers();
+    } else if (act === 'del'){
+      const ok = await modal({ title: 'Delete account', message: `Delete <b>${esc(email)}</b>? Their past attendance entries stay in the records.`, confirm: 'Delete', danger: true });
+      if (!ok) return;
+      await api('deleteUser', { email }); toast('Account deleted.'); loadUsers();
+    }
+  } catch (err) { toast(err.message, 'bad'); }
+});
+
+/* ---------- start ---------- */
+(async function start(){
+  if (state.token){
+    try { await boot(); return; } catch (e) { /* fall through to login */ }
+  }
+  show('login');
+})();
+</script>
+</body>
+</html>
