@@ -1,5 +1,5 @@
 // Keeps the app installable and loads the page shell quickly. Data always comes live from the server.
-const CACHE = 'pa-shell-v3';
+const CACHE = 'pa-shell-v4';
 const SHELL = ['./', 'index.html', 'Logo.png', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
