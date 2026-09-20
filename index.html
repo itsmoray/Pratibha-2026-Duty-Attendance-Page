@@ -176,6 +176,15 @@ button.hp.on{cursor:pointer}
 .rp-card tfoot td.nm{background:#f7f0df}
 .rp-card td.tt,.rp-card th.tt{text-align:center; font-weight:700; color:var(--maroon)}
 
+/* Activity log */
+.act{display:inline-block; padding:2px 10px; border-radius:99px; font-size:.74rem; font-weight:700; background:#e9e3d8; color:#5b5346; white-space:nowrap}
+.act.good{background:#d9eddf; color:#1f5a35}
+.act.bad{background:#f7dcdc; color:#8a1f27}
+.act.gold{background:#f0e2bd; color:#5b4310}
+td.det{max-width:460px; font-size:.86rem; color:#4a453d; word-break:break-word}
+td.tm{white-space:nowrap; font-size:.84rem}
+td.tm small{display:block; color:var(--muted)}
+
 /* Locked date for coordinators */
 .datelock{display:flex; align-items:center; gap:12px; background:#f3e9cf; border:1px solid var(--gold-l); border-radius:12px; padding:12px 14px}
 .datelock svg{width:22px; height:22px; flex:none; stroke:var(--maroon); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
@@ -427,6 +436,10 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
         <svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
         <span class="lg">Class reports</span><span class="sm">Reports</span>
       </button>
+      <button class="tab" role="tab" data-tab="activity" aria-selected="false" id="tab-activity-btn" hidden>
+        <svg class="ic" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span class="lg">Activity log</span><span class="sm">Activity</span>
+      </button>
       <button class="tab" role="tab" data-tab="users" aria-selected="false" id="tab-users-btn" hidden>
         <svg class="ic" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <span class="lg">Users</span><span class="sm">Users</span>
@@ -534,6 +547,38 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
         <p class="cls" style="margin:10px 0 0">One report per class, ready for the class advisor. Choose a course and semester to get just those classes, then download, share or save as PDF.</p>
       </div>
       <div id="rp-list"></div>
+    </section>
+
+    <!-- Activity log (admin) -->
+    <section id="tab-activity" hidden>
+      <div class="panel">
+        <div class="filters">
+          <label>Date <select id="af-date"></select></label>
+          <label>User <select id="af-user"></select></label>
+          <label>Action <select id="af-action"></select></label>
+          <label>Search <input id="af-search" type="text" placeholder="Name, class, details"></label>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="as-events">0</b><span>Events</span></div>
+        <div class="stat"><b id="as-users">0</b><span>Users</span></div>
+        <div class="stat"><b id="as-marked">0</b><span>Submissions</span></div>
+      </div>
+      <div class="tools">
+        <span class="cls" id="act-note"></span>
+        <div class="actions">
+          <button class="btn ghost small" id="act-refresh" type="button">Refresh</button>
+          <button class="btn small" id="act-export" type="button">Export Excel</button>
+        </div>
+      </div>
+      <div class="tablewrap" id="act-table">
+        <table style="min-width:760px">
+          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody id="act-body"></tbody>
+        </table>
+      </div>
+      <div id="act-cards" hidden></div>
+      <p class="cls" style="margin-top:8px">Newest first. Sign-ins, attendance submitted or removed, exports, password changes and admin actions are recorded, along with blocked attempts. The full history is also in the activity_log tab of the Google Sheet.</p>
     </section>
 
     <!-- Users -->
@@ -666,10 +711,14 @@ function modal({ title, message = '', fields = [], confirm = 'OK', cancel = 'Can
   });
 }
 
+/* Records a client-side action (export, print, sign-out) in the admin activity log */
+function logAct(type, detail = ''){ api('logActivity', { type, detail }).catch(() => {}); }
+
 /* ---------- auth flow ---------- */
 function show(view){ $('#login-view').hidden = view !== 'login'; $('#app-view').hidden = view !== 'app'; window.scrollTo(0, 0); }
 
 function signOut(expired){
+  if (!expired && state.token) logAct('signout');
   state.token = null; store.del('pa_token');
   state.user = null; state.recs = []; state.recsLoaded = false; state.sugCache = {};
   if (!expired) store.del('pa_draft');
@@ -728,6 +777,7 @@ function buildApp(){
   $('#who-name').textContent = state.user.name;
   $('#who-role').textContent = state.user.role === 'admin' ? 'Admin' : 'Coordinator';
   $('#tab-users-btn').hidden = state.user.role !== 'admin';
+  $('#tab-activity-btn').hidden = state.user.role !== 'admin';
 
   const dates = dateRange(state.cfg.dateFrom, state.cfg.dateTo);
   const today = state.cfg.today || ymd(new Date());
@@ -744,8 +794,9 @@ function buildApp(){
 $$('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
 function switchTab(name){
   $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name));
-  ['mark','records','reports','users'].forEach(n => $('#tab-' + n).hidden = n !== name);
+  ['mark','records','reports','activity','users'].forEach(n => $('#tab-' + n).hidden = n !== name);
   if (name === 'records' || name === 'reports') loadRecords(!state.recsLoaded);
+  if (name === 'activity') loadActivity();
   if (name === 'users') loadUsers();
   window.scrollTo(0, 0);
 }
@@ -1028,7 +1079,7 @@ function renderRecords(){
   });
   $('#rec-body').innerHTML = html;
 }
-mq.addEventListener('change', () => { renderRecords(); });
+mq.addEventListener('change', () => { renderRecords(); renderActivity(); });
 
 async function onRecClick(e){
   const rm = e.target.closest('.rm'), hp = e.target.closest('button[data-h][data-id]');
@@ -1069,6 +1120,7 @@ $('#rec-export').onclick = () => {
   ws['!cols'] = [{wch:11},{wch:28},{wch:26},{wch:8},{wch:14}, ...Array(n).fill({wch:4}), {wch:11},{wch:22}];
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Records');
   XLSX.writeFile(wb, `Pratibha_Duty_Attendance_Records_${ymd(new Date())}.xlsx`);
+  logAct('export_records', `${rows.length} entries`);
 };
 
 /* ---------- Class reports (for class advisors) ---------- */
@@ -1195,6 +1247,7 @@ function sheetName(base, used){
 async function exportClasses(list, filename, share){
   if (typeof XLSX === 'undefined') return toast('Excel library could not load. Check your connection.', 'bad');
   const wb = XLSX.utils.book_new(), used = new Set(), period = periodText();
+  const what = (list.length === 1 ? `${list[0].course} · ${list[0].sem} · ${list[0].batch}` : `${list.length} classes`) + `, ${period}`;
   if (list.length > 1){
     const ws = XLSX.utils.aoa_to_sheet([['Course','Semester','Batch','Students','Student-hours'],
       ...list.map(c => [c.course, c.sem, c.batch, c.students.length, c.totalHours])]);
@@ -1210,15 +1263,18 @@ async function exportClasses(list, filename, share){
     try {
       const arr = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const file = new File([arr], filename, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })){ await navigator.share({ files: [file], title: filename }); return; }
+      if (navigator.canShare && navigator.canShare({ files: [file] })){ await navigator.share({ files: [file], title: filename }); logAct('report_share', what); return; }
     } catch (e) { if (e && e.name === 'AbortError') return; }
   }
   XLSX.writeFile(wb, filename);
+  logAct('report_xlsx', what);
 }
 function printReports(i){
   const one = i != null;
   document.body.classList.toggle('printing-one', one);
   $$('.rp-card').forEach(c => c.classList.toggle('print-target', one && c.dataset.i === String(i)));
+  const c0 = one ? state.rp[i] : null;
+  logAct('report_print', (c0 ? `${c0.course} · ${c0.sem} · ${c0.batch}` : `${state.rp.length} classes`) + `, ${periodText()}`);
   window.print();
 }
 $('#rp-list').addEventListener('click', e => {
@@ -1234,6 +1290,83 @@ function allName(){
 $('#rp-xlsx-all').onclick = () => state.rp.length && exportClasses(state.rp, allName(), false);
 $('#rp-share-all').onclick = () => state.rp.length && exportClasses(state.rp, allName(), true);
 $('#rp-print-all').onclick = () => state.rp.length && printReports(null);
+
+/* ---------- Activity log (admin) ---------- */
+function actClass(a){
+  if (/Removed|Deleted|Blocked|Failed|Disabled/.test(a)) return 'bad';
+  if (/Marked|Created|Enabled/.test(a)) return 'good';
+  if (/Reset|Changed|Exported|Downloaded|Shared|Printed/.test(a)) return 'gold';
+  return '';
+}
+function actTime(t){ // "2026-09-24 14:05:33" -> { d: "24 Sep", h: "14:05", ymd }
+  const [d, h = ''] = String(t).split(' ');
+  return { ymd: d, d: /^\d{4}-\d{2}-\d{2}$/.test(d) ? fmtShort(d) : d, h: h.slice(0, 5) };
+}
+async function loadActivity(){
+  if (state.user.role !== 'admin') return;
+  $('#act-note').textContent = 'Loading…';
+  try {
+    const r = await api('activityLog');
+    state.acts = r.rows.map(a => ({ time: a[0], email: a[1], name: a[2], role: a[3], action: a[4], detail: a[5] }));
+    fillActivityFilters(); renderActivity();
+  } catch (e) { $('#act-note').textContent = ''; toast(e.message, 'bad'); }
+}
+function fillActivityFilters(){
+  const keep = { d: $('#af-date').value, u: $('#af-user').value, a: $('#af-action').value };
+  const dates = uniq(state.acts.map(x => actTime(x.time).ymd));
+  $('#af-date').innerHTML = '<option value="">All dates</option>' + dates.map(d => `<option value="${esc(d)}">${esc(/^\d{4}-/.test(d) ? fmtDate(d) : d)}</option>`).join('');
+  const users = new Map(); state.acts.forEach(x => { if (x.email && !users.has(x.email)) users.set(x.email, x.name || x.email); });
+  $('#af-user').innerHTML = '<option value="">All users</option>' + [...users].map(([e, n]) => `<option value="${esc(e)}">${esc(n)}</option>`).join('');
+  $('#af-action').innerHTML = '<option value="">All actions</option>' + uniq(state.acts.map(x => x.action)).sort().map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+  $('#af-date').value = keep.d; $('#af-user').value = keep.u; $('#af-action').value = keep.a;
+}
+function filteredActs(){
+  const d = $('#af-date').value, u = $('#af-user').value, a = $('#af-action').value, q = $('#af-search').value.trim().toLowerCase();
+  return (state.acts || []).filter(x =>
+    (!d || actTime(x.time).ymd === d) && (!u || x.email === u) && (!a || x.action === a) &&
+    (!q || (x.name + ' ' + x.email + ' ' + x.action + ' ' + x.detail).toLowerCase().includes(q)));
+}
+function renderActivity(){
+  if (!state.user || state.user.role !== 'admin') return;
+  const rows = filteredActs();
+  $('#as-events').textContent = rows.length;
+  $('#as-users').textContent = uniq(rows.map(x => x.email).filter(Boolean)).length;
+  $('#as-marked').textContent = rows.filter(x => x.action === 'Marked attendance').length;
+  $('#act-note').textContent = state.acts ? `${rows.length} event${rows.length === 1 ? '' : 's'} shown` : '';
+  const phone = mq.matches;
+  $('#act-table').hidden = phone; $('#act-cards').hidden = !phone;
+  const who = x => `${esc(x.name || x.email || '—')}${x.role ? ` <span class="cls">· ${esc(x.role)}</span>` : ''}`;
+  if (!rows.length){
+    const msg = '<div class="empty">No activity recorded for these filters.</div>';
+    $('#act-body').innerHTML = `<tr><td colspan="4" class="empty">No activity recorded for these filters.</td></tr>`;
+    $('#act-cards').innerHTML = msg; return;
+  }
+  $('#act-body').innerHTML = phone ? '' : rows.map(x => {
+    const t = actTime(x.time);
+    return `<tr><td class="tm"><b>${esc(t.h)}</b><small>${esc(t.d)}</small></td>
+      <td>${who(x)}<div class="cls">${esc(x.email)}</div></td>
+      <td><span class="act ${actClass(x.action)}">${esc(x.action)}</span></td>
+      <td class="det">${esc(x.detail)}</td></tr>`;
+  }).join('');
+  $('#act-cards').innerHTML = !phone ? '' : rows.map(x => {
+    const t = actTime(x.time);
+    return `<div class="rcard"><div class="rc-top"><b>${esc(x.name || x.email || '—')}</b><span class="cls">${esc(t.h)} · ${esc(t.d)}</span></div>
+      <div style="margin-top:8px"><span class="act ${actClass(x.action)}">${esc(x.action)}</span></div>
+      ${x.detail ? `<div class="cls" style="margin-top:8px;word-break:break-word">${esc(x.detail)}</div>` : ''}</div>`;
+  }).join('');
+}
+['#af-date','#af-user','#af-action'].forEach(s => $(s).onchange = renderActivity);
+$('#af-search').addEventListener('input', renderActivity);
+$('#act-refresh').onclick = loadActivity;
+$('#act-export').onclick = () => {
+  if (typeof XLSX === 'undefined') return toast('Excel library could not load. Check your connection.', 'bad');
+  const rows = filteredActs();
+  if (!rows.length) return toast('Nothing to export.', 'bad');
+  const ws = XLSX.utils.aoa_to_sheet([['Time','Email','Name','Role','Action','Details'], ...rows.map(x => [x.time, x.email, x.name, x.role, x.action, x.detail])]);
+  ws['!cols'] = [{wch:20},{wch:30},{wch:20},{wch:12},{wch:28},{wch:90}];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Activity log');
+  XLSX.writeFile(wb, `Pratibha_Duty_Attendance_Activity_${ymd(new Date())}.xlsx`);
+};
 
 /* ---------- Users (admin) ---------- */
 async function loadUsers(){
