@@ -47,20 +47,21 @@ button{touch-action:manipulation}
 .hero.compact .eyebrow{margin-top:0; font-size:.86rem}
 .hero.compact h1{font-size:clamp(1.3rem,4.6vw,2rem)}
 .hero.compact h1 span{color:var(--gold-l)}
-.hero.compact p{font-size:.86rem; margin-top:6px; color:#eadfd8}
+.hero.compact p{font-size:.86rem; margin:6px 0 0; max-width:none; color:#eadfd8}
 .htxt{flex:1; min-width:0}
 .statusbar{background:var(--card); border-bottom:1px solid var(--line); font-size:.86rem; color:var(--muted)}
 .sb-in{max-width:1000px; margin:0 auto; padding:11px 16px; display:flex; justify-content:space-between; align-items:center; gap:8px 14px; flex-wrap:wrap}
 .sb-in b{color:var(--ink); font-weight:600}
 .sb-act{display:flex; gap:14px; flex-wrap:wrap}
-.foot{text-align:center; color:var(--muted); font-size:.8rem; padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px)); line-height:1.7}
+.foot{text-align:center; color:var(--muted); font-size:.78rem; padding:16px 20px calc(22px + env(safe-area-inset-bottom,0px)); line-height:1.7; opacity:.85}
 
 /* ---------- Login ---------- */
 #login-view{min-height:100vh; display:flex; flex-direction:column}
-.login-body{flex:1; display:flex; justify-content:center; align-items:flex-start; padding:34px 20px 20px}
-.login-body .panel{width:100%; max-width:400px; padding:26px 24px 28px}
-.login-body label{margin-bottom:20px}
-.login-body .btn{margin-top:8px; min-height:50px}
+.login-body{flex:1; display:flex; justify-content:center; align-items:flex-start; padding:32px 20px 16px}
+.login-body .panel{width:100%; max-width:400px; padding:22px 22px 24px}
+.login-body label{margin-bottom:18px}
+.login-body input{min-height:48px}
+.login-body .btn{margin-top:6px; min-height:48px}
 #login-err{min-height:0; margin:0}
 #login-err:not(:empty){margin:-6px 0 14px}
 
@@ -222,77 +223,93 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
 #splash-msg{font-size:.92rem; color:#eadfd8; min-height:1.4em; max-width:320px; line-height:1.4}
 @media (prefers-reduced-motion: reduce){ #splash{display:none!important} }
 
-/* ---------- Phones ---------- */
+/* ---------- Phones (compact sizing) ---------- */
 @media (max-width:700px){
-  body{line-height:1.5}
-  .wrap{padding:20px 16px calc(120px + env(safe-area-inset-bottom,0px))}
-  .hero.compact{padding:calc(18px + env(safe-area-inset-top,0px)) 18px 18px}
-  .hero-in{gap:14px}
-  .hero.compact .hlogo{width:64px; height:64px; border-radius:14px; border-width:2px}
-  .hero.compact .eyebrow{font-size:.72rem; letter-spacing:.04em; line-height:1.4}
-  .hero.compact h1{font-size:1.4rem; margin-top:4px}
+  html{font-size:14px}
+  body{line-height:1.45}
+  .wrap{padding:16px 14px calc(92px + env(safe-area-inset-bottom,0px))}
+  .hero.compact{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}
+  .hero-in{gap:12px}
+  .hero.compact .hlogo{width:46px; height:46px; border-radius:11px; border-width:2px}
+  .hero.compact .eyebrow{font-size:.66rem; letter-spacing:.08em; line-height:1.3}
+  .hero.compact h1{font-size:1.5rem; margin-top:2px}
   .hero.compact p{display:none}
-  .sb-in{padding:14px 18px; gap:10px 16px}
-  .sb-act{gap:20px}
-  .panel{padding:22px 18px 24px}
-  .step{margin-bottom:30px}
-  .step>h2{font-size:1.12rem; margin-bottom:16px}
-  .step>h2 .n{width:28px; height:28px}
-  label{font-size:.86rem; margin-bottom:20px}
-  label>input,label>select{margin-top:8px}
-  .grid3{grid-template-columns:1fr; gap:0}
-  .grid3 label:last-child{margin-bottom:0}
-  input[type=text],input[type=email],input[type=password],select,textarea{min-height:52px; padding:14px; border-radius:12px}
-  textarea{min-height:200px}
-  #date-chips{grid-template-columns:repeat(4,1fr); gap:10px}
-  .chip.dt{padding:11px 2px; border-radius:14px}
-  .chip.dt small{font-size:.74rem; margin-bottom:2px}
-  .chip.dt b{font-size:.95rem}
-  #hour-chips{gap:10px}
-  .chip.hr{height:58px; border-radius:16px; font-size:1.2rem}
-  .quick{gap:10px; margin-top:16px}
-  .btn.small{min-height:42px; padding:9px 15px}
-  .row{margin-top:10px}
-  .sugbox{margin-top:18px}
-  .chips{gap:10px}
-  #review-btn{margin-top:6px; min-height:54px; font-size:1.05rem}
-  .result{margin-top:20px; padding:14px 16px}
-  .filters{grid-template-columns:1fr 1fr; gap:16px 14px}
+  .sb-in{padding:10px 16px; gap:6px 14px}
+  .sb-in{font-size:.86rem}
+  .sb-act{gap:16px}
+  .linkbtn{font-size:.86rem; padding:2px 0}
+  .badge{font-size:.62rem; padding:2px 8px}
+  .panel{padding:16px 16px 18px; border-top-width:3px; border-radius:12px}
+  .step{margin-bottom:22px}
+  .step>h2{font-size:1.05rem; margin-bottom:12px; gap:8px}
+  .step>h2 .n{width:22px; height:22px; font-size:.72rem}
+  label{font-size:.84rem; margin-bottom:14px}
+  label>input,label>select{margin-top:6px}
+  .grid3{grid-template-columns:1fr 1fr; gap:0 10px}
+  .grid3 label:first-child{grid-column:1/-1}
+  .grid3 label:not(:first-child){margin-bottom:0}
+  input[type=text],input[type=email],input[type=password],select,textarea{min-height:44px; padding:10px 12px; border-radius:10px}
+  textarea{min-height:150px}
+  #date-chips{grid-template-columns:repeat(4,1fr); gap:8px}
+  .chip.dt{padding:8px 2px; border-radius:11px}
+  .chip.dt small{font-size:.72rem}
+  .chip.dt b{font-size:.92rem}
+  #hour-chips{gap:8px}
+  .chip.hr{height:44px; border-radius:12px; font-size:1.1rem}
+  .chip{min-height:34px; padding:6px 13px}
+  .quick{gap:8px; margin-top:12px}
+  .btn{padding:10px 16px; min-height:44px; border-radius:10px}
+  .btn.small{min-height:36px; padding:7px 12px; border-radius:9px; font-size:.9rem}
+  .row{margin-top:8px}
+  .sugbox{margin-top:14px}
+  .chips{gap:8px}
+  .chip.sug{min-height:32px; padding:4px 11px}
+  #review-btn{margin-top:4px; min-height:46px; font-size:1.05rem}
+  .result{margin-top:16px; padding:12px 14px}
+  .filters{grid-template-columns:1fr 1fr; gap:12px}
   .filters label{margin:0}
   .filters label:last-child{grid-column:1/-1}
-  .stats{gap:12px; margin:18px 0}
-  .stat{padding:14px 8px}
-  .stat b{font-size:1.35rem}
-  .strip{gap:8px; margin-bottom:18px}
-  .strip div{padding:9px 4px}
-  .tools{margin:16px 0 12px}
-  #rec-cards .dh{margin:22px 0 12px; padding:9px 14px}
-  .rcard{padding:16px; margin-bottom:12px; border-radius:14px}
-  .rc-hours{gap:8px; margin:14px 0 12px}
-  .hp{height:42px}
-  .rp-card{padding:18px 16px; margin-top:20px}
-  .rp-head{margin-bottom:14px}
-  .rp-head .actions{width:100%; gap:10px}
+  .stats{gap:8px; margin:14px 0}
+  .stat{padding:10px 6px; border-radius:10px}
+  .stat b{font-size:1.3rem}
+  .stat span{font-size:.78rem}
+  .strip{gap:6px; margin-bottom:14px}
+  .strip div{padding:6px 2px; border-radius:9px; font-size:.7rem}
+  .strip div b{font-size:1.05rem}
+  .tools{margin:12px 0 10px}
+  #rec-cards .dh{margin:16px 0 8px; padding:7px 12px; font-size:1rem}
+  .rcard{padding:12px 14px; margin-bottom:10px; border-radius:12px}
+  .rc-top b{font-size:1.05rem}
+  .rc-hours{gap:6px; margin:10px 0 8px}
+  .hp{height:36px; border-radius:9px; font-size:.95rem}
+  .rp-card{padding:14px; margin-top:14px; border-radius:12px}
+  .rp-head{margin-bottom:10px}
+  .rp-head h3{font-size:1.15rem}
+  .rp-head .actions{width:100%; gap:8px}
   .rp-head .actions .btn{flex:1}
-  .usergrid{gap:18px}
+  .usergrid{gap:14px}
   .usergrid label{margin:0}
   .namebox{columns:1}
   .tabs{position:fixed; left:0; right:0; bottom:0; z-index:40; margin:0; background:var(--card); border-top:1px solid var(--line); border-bottom:0;
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px)); justify-content:space-around; gap:4px; overflow:visible; box-shadow:0 -4px 16px rgba(60,30,20,.1)}
-  .tab{flex:1; flex-direction:column; gap:4px; font-family:var(--sans); font-size:.74rem; padding:9px 2px; border-bottom:0; margin:0; border-radius:12px; justify-content:center}
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px)); justify-content:space-around; gap:2px; overflow:visible; box-shadow:0 -3px 12px rgba(60,30,20,.08)}
+  .tab{flex:1; flex-direction:column; gap:2px; font-family:var(--sans); font-size:11px; padding:6px 2px; border-bottom:0; margin:0; border-radius:10px; justify-content:center}
   .tab[aria-selected=true]{background:#f3e9cf; color:var(--maroon)}
   .tab .lg{display:none} .tab .sm{display:inline}
-  .tab .ic{width:23px; height:23px}
-  .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-  dialog{margin:auto 0 0 0; max-width:100%; width:100%; border-radius:18px 18px 0 0; border-bottom:0}
-  .dlg-card{padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px))}
-  .dlg-card label{margin-bottom:16px}
-  .dlg-actions{gap:10px; margin-top:12px}
+  .tab .ic{width:21px; height:21px}
+  .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px)); font-size:.95rem}
+  dialog{margin:auto 0 0 0; max-width:100%; width:100%; border-radius:16px 16px 0 0; border-bottom:0}
+  .dlg-card{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  .dlg-card h3{font-size:1.1rem}
+  .dlg-card label{margin-bottom:12px}
+  .dlg-actions{gap:8px; margin-top:10px}
   .dlg-actions .btn{flex:1}
-  .hero{padding:calc(22px + env(safe-area-inset-top,0px)) 20px 24px}
-  .hero .eyebrow{font-size:.78rem; margin-top:16px}
-  .login-body{padding:30px 18px 16px}
-  .login-body .panel{padding:24px 20px 26px}
+  .login-body{padding:20px 14px 10px}
+  .login-body .panel{padding:18px 16px 20px}
+  .login-body label{margin-bottom:14px}
+  .login-body input,.login-body .btn{min-height:44px}
+  .foot{font-size:.8rem; padding:12px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  th{padding:8px}
+  td{padding:7px 8px}
 }
 
 /* ---------- Print (class advisor reports) ---------- */
@@ -337,11 +354,15 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
 
 <!-- ============ LOGIN ============ -->
 <main id="login-view" hidden>
-  <header class="hero">
-    <img class="hlogo big" src="Logo.png" alt="Pratibha Arts Fest">
-    <div class="eyebrow">Pratibha Arts Fest 2026-27</div>
-    <h1>Duty Attendance</h1>
-    <p>Hour-wise attendance for students on practice, volunteering &amp; decoration duty</p>
+  <header class="hero compact">
+    <div class="hero-in">
+      <img class="hlogo" src="Logo.png" alt="Pratibha Arts Fest">
+      <div class="htxt">
+        <div class="eyebrow">Pratibha Arts Fest 2026-27</div>
+        <h1>Duty <span>Attendance</span></h1>
+        <p>Hour-wise attendance for students on practice, volunteering &amp; decoration duty</p>
+      </div>
+    </div>
   </header>
   <div class="login-body">
     <form class="panel" id="login-form" autocomplete="on">
@@ -368,7 +389,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
     <div class="hero-in">
       <img class="hlogo" src="Logo.png" alt="">
       <div class="htxt">
-        <div class="eyebrow">Pratibha Arts Fest 2026-27 · Rhythm of Sapta Swaras</div>
+        <div class="eyebrow">Pratibha Arts Fest 2026-27</div>
         <h1>Duty <span>Attendance</span></h1>
         <p>Hour-wise attendance for students on practice, volunteering &amp; decoration duty</p>
       </div>
