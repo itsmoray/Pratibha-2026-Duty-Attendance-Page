@@ -116,7 +116,7 @@ textarea{min-height:170px; resize:vertical; line-height:1.5}
 .chip{appearance:none; cursor:pointer; padding:8px 15px; border-radius:99px; border:1px solid var(--line); background:var(--card); color:var(--ink); font-size:.92rem; transition:background .12s; min-height:38px}
 .chip:hover{background:#f7f0df}
 .chip[aria-pressed=true]{background:var(--dark); color:#fff; border-color:var(--dark)}
-#date-chips{display:grid; grid-template-columns:repeat(8,1fr); gap:8px}
+#date-chips,#pub-date-chips{display:grid; grid-template-columns:repeat(8,1fr); gap:8px}
 .chip.dt{border-radius:12px; padding:7px 2px; text-align:center; line-height:1.15}
 .chip.dt small{display:block; font-size:.7rem; opacity:.75}
 .chip.dt b{font-size:.9rem; font-weight:600}
@@ -283,7 +283,7 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
   .grid3 label:not(:first-child){margin-bottom:0}
   input[type=text],input[type=email],input[type=password],select,textarea{min-height:44px; padding:10px 12px; border-radius:10px}
   textarea{min-height:150px}
-  #date-chips{grid-template-columns:repeat(4,1fr); gap:8px}
+  #date-chips,#pub-date-chips{grid-template-columns:repeat(4,1fr); gap:8px}
   .chip.dt{padding:8px 2px; border-radius:11px}
   .chip.dt small{font-size:.72rem}
   .chip.dt b{font-size:.92rem}
@@ -400,7 +400,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
   <div class="statusbar">
     <div class="sb-in">
       <span>Read-only — for students to check their own duty attendance</span>
-      <span class="sb-act"><button class="linkbtn" id="pub-signin" type="button">Faculty / Admin sign in</button></span>
+      <span class="sb-act"><button class="linkbtn" id="pub-signin" type="button">Mark Attendance → Faculty / Admin sign in</button></span>
     </div>
   </div>
 
