@@ -693,8 +693,8 @@ const state = {
 };
 
 /* ---------- API ---------- */
-async function api(action, payload = {}){
-  if (API_URL.startsWith('PASTE_')) throw new Error('API_URL is not set in index.html yet.');
+function sleep_(ms){ return new Promise(r => setTimeout(r, ms)); }
+async function apiOnce(action, payload){
   let res;
   try {
     res = await fetch(API_URL, {
@@ -702,9 +702,31 @@ async function api(action, payload = {}){
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action, token: state.token, ...payload })
     });
-  } catch (e) { throw new Error('Could not reach the server. Check your internet connection.'); }
-  let data;
-  try { data = await res.json(); } catch (e) { throw new Error('Unexpected response from the server.'); }
+  } catch (e) { const err = new Error('Could not reach the server. Check your internet connection.'); err.transient = true; throw err; }
+  try { return await res.json(); }
+  catch (e) { const err = new Error('Unexpected response from the server.'); err.transient = true; throw err; }
+}
+async function api(action, payload = {}){
+  if (API_URL.startsWith('PASTE_')) throw new Error('API_URL is not set in index.html yet.');
+  const RETRIES = 2, BACKOFF = [600, 1400]; // total up to 3 attempts before giving up
+  let data, lastErr;
+  for (let attempt = 0; attempt <= RETRIES; attempt++){
+    try {
+      data = await apiOnce(action, payload);
+      // A POST occasionally gets redirected into a GET on Apps Script's end (cold start),
+      // landing on the doGet() placeholder instead of the real action — treat it the same
+      // as a transient failure and retry rather than surfacing it straight away.
+      if (!data.ok && data.service === 'Pratibha duty attendance'){
+        if (attempt < RETRIES){ await sleep_(BACKOFF[attempt]); continue; }
+      }
+      break;
+    } catch (e) {
+      lastErr = e;
+      if (e.transient && attempt < RETRIES){ await sleep_(BACKOFF[attempt]); continue; }
+      throw e;
+    }
+  }
+  if (!data) throw lastErr || new Error('Request failed.');
   if (!data.ok){
     if (data.code === 'AUTH') signOut(true);
     throw new Error(data.error || 'Request failed.');
