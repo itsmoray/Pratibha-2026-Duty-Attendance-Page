@@ -82,6 +82,11 @@ textarea{min-height:170px; resize:vertical; line-height:1.5}
 }
 .btn:hover{filter:brightness(1.15)} .btn:active{transform:translateY(1px)}
 .btn:disabled{opacity:.6; cursor:wait}
+.btn.busy{display:inline-flex; align-items:center; justify-content:center; gap:9px}
+.btn.busy.block{display:flex}
+.spin{width:15px; height:15px; border-radius:50%; flex:none; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; animation:btnspin .7s linear infinite}
+.btn.ghost .spin{border-color:rgba(0,0,0,.15); border-top-color:var(--ink)}
+@keyframes btnspin{to{transform:rotate(360deg)}}
 .btn.block{width:100%}
 .btn.ghost{background:var(--card); color:var(--ink); border-color:var(--line); font-weight:500}
 .btn.ghost:hover{background:#f7f0df; filter:none}
@@ -668,8 +673,16 @@ function toast(msg, kind = 'ok'){
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast', 3600);
 }
 function setBusy(btn, on){
-  if (on){ btn.dataset.t = btn.textContent; btn.textContent = 'Please wait…'; btn.disabled = true; }
-  else { btn.textContent = btn.dataset.t || btn.textContent; btn.disabled = false; }
+  if (on){
+    btn.dataset.t = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add('busy');
+    btn.innerHTML = '<span class="spin" aria-hidden="true"></span>Please wait…';
+  } else {
+    btn.classList.remove('busy');
+    btn.innerHTML = btn.dataset.t || btn.innerHTML;
+    btn.disabled = false;
+  }
 }
 
 /* ---------- state ---------- */
