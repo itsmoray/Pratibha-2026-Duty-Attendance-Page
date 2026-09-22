@@ -428,11 +428,11 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
         <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span class="lg">Mark attendance</span><span class="sm">Mark</span>
       </button>
-      <button class="tab" role="tab" data-tab="records" aria-selected="false">
+      <button class="tab" role="tab" data-tab="records" aria-selected="false" id="tab-records-btn">
         <svg class="ic" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
         <span class="lg">Records</span><span class="sm">Records</span>
       </button>
-      <button class="tab" role="tab" data-tab="reports" aria-selected="false">
+      <button class="tab" role="tab" data-tab="reports" aria-selected="false" id="tab-reports-btn">
         <svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
         <span class="lg">Class reports</span><span class="sm">Reports</span>
       </button>
@@ -449,7 +449,6 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
     <!-- Mark -->
     <section id="tab-mark">
       <div class="panel">
-        <div id="win-note" hidden></div>
         <div class="step">
           <h2><span class="n">1</span>Date</h2>
           <div id="date-chips"></div>
@@ -526,7 +525,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
         </table>
       </div>
       <div id="rec-cards" hidden></div>
-      <p class="cls" style="margin-top:8px">Tap a filled hour to remove just that hour, or use Edit to correct a name or the hours. House faculty coordinators can change today's entries between 9 AM and 6 PM; admins can change any entry at any time. For class-wise reports, use the Class reports tab.</p>
+      <p class="cls" style="margin-top:8px">Tap a filled hour to remove just that hour. Faculty coordinators can remove only their own entries from today, between 9:00 AM and 6:00 PM; admins can change any, anytime. For class-wise reports, use the Class reports tab.</p>
     </section>
 
     <!-- Class reports -->
@@ -593,7 +592,11 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
             <div class="pwrow"><input id="nu-pw" type="text" autocomplete="off"><button class="btn ghost small" id="nu-gen" type="button">Generate</button></div>
           </label>
           <label>Role
-            <select id="nu-role"><option value="captain">House Captain</option><option value="faculty">House Faculty Coordinator</option><option value="admin">Admin</option></select>
+            <select id="nu-role">
+              <option value="coordinator">House Faculty Coordinator</option>
+              <option value="captain">House Captain</option>
+              <option value="admin">Admin</option>
+            </select>
           </label>
           <button class="btn" id="nu-add" type="button">Create</button>
         </div>
@@ -638,22 +641,6 @@ const dateRange = (a,b) => { const out = []; for (let d = parseYmd(a); d <= pars
 const uniq = arr => [...new Set(arr)];
 const mq = window.matchMedia('(max-width: 700px)');
 
-/* ---------- roles + attendance window ---------- */
-const ROLE_LABEL = { admin: 'Admin', faculty: 'House Faculty Coordinator', captain: 'House Captain' };
-const isAdmin   = () => !!state.user && state.user.role === 'admin';
-const isManager = () => !!state.user && (state.user.role === 'admin' || state.user.role === 'faculty');
-const fmtClock  = h => `${h % 12 || 12}:00 ${h >= 12 ? 'PM' : 'AM'}`;
-const windowText = () => `${fmtClock(state.cfg.windowStart)} and ${fmtClock(state.cfg.windowEnd)}`;
-// Server clock (minutes since midnight in the fest's time zone), advanced by the time since it was read.
-function serverMin(){ return (state.cfg.nowMin + (performance.now() - state.cfg.clock0) / 60000) % 1440; }
-// Admins are never restricted; everyone else can only work inside the daily window.
-function windowOpen(){
-  if (isAdmin()) return true;
-  const m = serverMin();
-  return m >= state.cfg.windowStart * 60 && m < state.cfg.windowEnd * 60;
-}
-function setCfg(c){ c.clock0 = performance.now(); state.cfg = c; }
-
 // [1,2,3,5] -> "1–3, 5"
 function fmtHours(arr){
   const a = [...arr].sort((x,y) => x-y), out = [];
@@ -662,6 +649,12 @@ function fmtHours(arr){
     out.push(j > i ? `${a[i]}–${a[j]}` : `${a[i]}`); i = j+1;
   }
   return out.join(', ');
+}
+
+// 9 -> "9:00 AM", 18 -> "6:00 PM"
+function fmtHourLabel(h){
+  const ap = h < 12 ? 'AM' : 'PM', hh = (h % 12) === 0 ? 12 : (h % 12);
+  return `${hh}:00 ${ap}`;
 }
 
 let toastTimer;
@@ -758,7 +751,7 @@ $('#btn-out').onclick = () => signOut(false);
 
 async function boot(){
   const r = await api('init');
-  state.user = r.user; setCfg(r.config); state.batches = r.batches;
+  state.user = r.user; state.cfg = r.config; state.batches = r.batches;
   buildApp(); show('app');
 }
 
@@ -790,15 +783,19 @@ $('#btn-install').onclick = async () => {
 };
 
 /* ---------- app shell ---------- */
+function roleLabel(role){
+  return role === 'admin' ? 'Admin' : role === 'captain' ? 'House Captain' : 'House Faculty Coordinator';
+}
+function canEditRecords(){ return state.user.role === 'admin' || state.user.role === 'coordinator'; }
+
 function buildApp(){
   $('#who-name').textContent = state.user.name;
-  $('#who-role').textContent = ROLE_LABEL[state.user.role] || '';
-  $('#tab-users-btn').hidden = !isAdmin();
-  $('#tab-activity-btn').hidden = !isAdmin();
-  // House Captains only add attendance: no Records / Reports, and the tab bar has nothing to switch between.
-  $('.tab[data-tab="records"]').hidden = !isManager();
-  $('.tab[data-tab="reports"]').hidden = !isManager();
-  $('.tabs').hidden = !isManager();
+  $('#who-role').textContent = roleLabel(state.user.role);
+  $('#tab-users-btn').hidden = state.user.role !== 'admin';
+  $('#tab-activity-btn').hidden = state.user.role !== 'admin';
+  // House captains can only add attendance — no Records or Class reports tabs.
+  $('#tab-records-btn').hidden = !canEditRecords();
+  $('#tab-reports-btn').hidden = !canEditRecords();
 
   const dates = dateRange(state.cfg.dateFrom, state.cfg.dateTo);
   const today = state.cfg.today || ymd(new Date());
@@ -809,14 +806,11 @@ function buildApp(){
   $('#names').value = store.get('pa_draft') || ''; updateCount();
   $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
   initRecordFilters(dates); initReportFilters(dates);
-  renderWindowNote();
   switchTab('mark');
 }
 
 $$('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
 function switchTab(name){
-  if ((name === 'records' || name === 'reports') && !isManager()) name = 'mark';
-  if ((name === 'activity' || name === 'users') && !isAdmin()) name = 'mark';
   $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name));
   ['mark','records','reports','activity','users'].forEach(n => $('#tab-' + n).hidden = n !== name);
   if (name === 'records' || name === 'reports') loadRecords(!state.recsLoaded);
@@ -827,22 +821,15 @@ function switchTab(name){
 
 /* ---------- Mark: date + hours ---------- */
 const LOCK_SVG = '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-const CLOCK_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-// Shows House Faculty Coordinators / Captains whether attendance can be added right now.
-function renderWindowNote(){
-  const box = $('#win-note');
-  if (isAdmin()){ box.hidden = true; state.winOpen = true; return; }
-  const open = state.winOpen = windowOpen();
-  box.hidden = false; box.className = 'datelock' + (open ? '' : ' off'); box.style.marginBottom = '22px';
-  box.innerHTML = open
-    ? `${CLOCK_SVG}<div><b>Attendance is open</b><span>Daily between ${esc(windowText())}</span></div>`
-    : `${CLOCK_SVG}<div><b>Attendance is closed</b><span>You can add attendance daily between ${esc(windowText())}</span></div>`;
-}
 function renderDateChips(dates){
   const box = $('#date-chips');
   if (state.user.role !== 'admin'){
-    // Coordinators cannot choose the date: it is today, taken from the server clock.
+    // Coordinators/captains cannot choose the date: it is today, taken from the server clock.
     box.style.display = 'block';
+    if (state.mk.date && !state.cfg.markOpen){
+      box.innerHTML = `<div class="datelock off">${LOCK_SVG}<div>Attendance can only be marked between ${esc(fmtHourLabel(state.cfg.markStartHour))} and ${esc(fmtHourLabel(state.cfg.markEndHour))}.</div></div>`;
+      return;
+    }
     box.innerHTML = state.mk.date
       ? `<div class="datelock">${LOCK_SVG}<div><b>${esc(fmtDate(state.mk.date))}</b><span>Set automatically to today</span></div></div>`
       : `<div class="datelock off">${LOCK_SVG}<div>Attendance can only be marked on the fest days, ${esc(fmtShort(dates[0]))} – ${esc(fmtShort(dates[dates.length - 1]))}.</div></div>`;
@@ -987,8 +974,9 @@ $('#sug-all').onclick = () => {
 $('#review-btn').onclick = async () => {
   const m = state.mk, err = $('#mark-err'); err.textContent = ''; $('#mark-result').innerHTML = '';
   const names = parseNames($('#names').value), hours = [...m.hours].sort((a,b) => a-b);
-  if (!windowOpen()){ renderWindowNote(); return err.textContent = `Attendance can only be added between ${windowText()}.`; }
   if (!m.date) return err.textContent = state.user.role === 'admin' ? 'Pick a date.' : 'Attendance can only be marked on the fest days.';
+  if (state.user.role !== 'admin' && !state.cfg.markOpen) return err.textContent =
+    `Attendance can only be marked between ${fmtHourLabel(state.cfg.markStartHour)} and ${fmtHourLabel(state.cfg.markEndHour)}.`;
   if (!m.course || !m.sem || !m.batch) return err.textContent = 'Select the course, semester and batch.';
   if (!hours.length) return err.textContent = 'Select at least one hour.';
   if (!names.length) return err.textContent = 'Enter at least one student name.';
@@ -1061,9 +1049,8 @@ function filteredRecs(){
 const cmpRec = (a,b) =>
   a.date.localeCompare(b.date) || a.course.localeCompare(b.course) || a.sem.localeCompare(b.sem) ||
   a.batch.localeCompare(b.batch, undefined, {numeric:true}) || a.name.localeCompare(b.name);
-// Admins: any entry, any time. House faculty coordinators: today's entries, inside the window.
-const canDel = r => isAdmin() || (state.user.role === 'faculty' && r.date === state.cfg.today && windowOpen());
-const editBtns = r => `<div class="actions"><button class="btn ghost small ed" data-id="${esc(r.id)}">Edit</button><button class="btn ghost small rm" data-id="${esc(r.id)}">Remove</button></div>`;
+const canDel = r => state.user.role === 'admin' ||
+  (state.user.role === 'coordinator' && r.by === state.user.email && r.date === state.cfg.today && state.cfg.markOpen);
 
 function renderRecords(){
   if (!state.user) return;
@@ -1094,7 +1081,7 @@ function renderRecords(){
       html += `<div class="rcard"><div class="rc-top"><b>${esc(r.name)}</b><span class="cls">${esc(r.sem)} · ${esc(r.batch)}</span></div>
         <div class="cls">${esc(r.course)}</div>
         <div class="rc-hours">${pills}</div>
-        <div class="rc-foot"><span class="cls">By ${esc(r.byName)}</span>${canDel(r) ? editBtns(r) : ''}</div></div>`;
+        <div class="rc-foot"><span class="cls">By ${esc(r.byName)}</span>${canDel(r) ? `<button class="btn ghost small rm" data-id="${esc(r.id)}">Remove</button>` : ''}</div></div>`;
     });
     $('#rec-cards').innerHTML = html;
     return;
@@ -1113,19 +1100,17 @@ function renderRecords(){
     }).join('');
     html += `<tr><td>${esc(r.name)}</td><td class="cls">${esc(r.course)} · ${esc(r.sem)} · ${esc(r.batch)}</td>${cells}
       <td class="cls">${esc(r.byName)}</td>
-      <td>${canDel(r) ? editBtns(r) : ''}</td></tr>`;
+      <td>${canDel(r) ? `<button class="btn ghost small rm" data-id="${esc(r.id)}">Remove</button>` : ''}</td></tr>`;
   });
   $('#rec-body').innerHTML = html;
 }
 mq.addEventListener('change', () => { renderRecords(); renderActivity(); });
 
 async function onRecClick(e){
-  const rm = e.target.closest('.rm'), ed = e.target.closest('.ed'), hp = e.target.closest('button[data-h][data-id]');
-  if (!rm && !hp && !ed) return;
-  const id = (rm || ed || hp).dataset.id, rec = state.recs.find(x => x.id === id);
+  const rm = e.target.closest('.rm'), hp = e.target.closest('button[data-h][data-id]');
+  if (!rm && !hp) return;
+  const id = (rm || hp).dataset.id, rec = state.recs.find(x => x.id === id);
   if (!rec) return;
-  if (!canDel(rec)){ toast(`You can only change today's entries, between ${windowText()}.`, 'bad'); renderRecords(); return; }
-  if (ed){ editRec(rec); return; }
   if (hp && !rm){
     const h = +hp.dataset.h;
     const ok = await modal({ title: 'Remove hour', message: `Remove hour ${h} for <b>${esc(rec.name)}</b> on ${esc(fmtDate(rec.date))}?`, confirm: 'Remove', danger: true });
@@ -1145,39 +1130,6 @@ async function onRecClick(e){
       renderRecords(); renderReports(); toast(r.denied ? 'Not allowed.' : 'Removed.');
     } catch (err) { toast(err.message, 'bad'); }
   }
-}
-/* Edit one student-day entry: correct the name and / or the hours */
-async function editRec(rec){
-  const n = state.cfg.periods, sel = new Set(rec.hours);
-  const chips = Array.from({length: n}, (_,i) =>
-    `<button type="button" class="chip hr" data-h="${i+1}" aria-pressed="${sel.has(i+1)}" aria-label="Hour ${i+1}">${i+1}</button>`).join('');
-  let newName = rec.name;
-  const p = modal({
-    title: 'Edit attendance', confirm: 'Save changes',
-    message: `<div class="cls" style="margin-bottom:12px">${esc(fmtDate(rec.date))} · ${esc(rec.course)} · ${esc(rec.sem)} · ${esc(rec.batch)}</div>
-      <label>Student name<input id="ed-name" type="text" autocomplete="off" value="${esc(rec.name)}"></label>
-      <div style="font-size:.8rem;color:var(--muted);font-weight:600">Hours away from class</div>
-      <div id="ed-hours" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:6px 0 4px">${chips}</div>`,
-    check: () => {
-      if (!windowOpen()) return `You can only change today's entries, between ${windowText()}.`;
-      newName = cleanName($('#ed-name').value);
-      if (!newName) return 'Enter the student name.';
-      if (!sel.size) return 'Select at least one hour, or close this and use Remove.';
-      return '';
-    }
-  });
-  $$('#ed-hours .chip').forEach(c => c.onclick = () => {
-    const h = +c.dataset.h; sel.has(h) ? sel.delete(h) : sel.add(h);
-    c.setAttribute('aria-pressed', sel.has(h));
-  });
-  if (!await p) return;
-  const hours = [...sel].sort((a,b) => a-b);
-  if (newName === rec.name && fmtHours(hours) === fmtHours(rec.hours)){ toast('No changes to save.'); return; }
-  try {
-    const r = await api('editRecord', { id: rec.id, name: newName, hours });
-    rec.name = r.name; rec.hours = r.hours; state.sugCache = {};
-    renderRecords(); renderReports(); toast('Changes saved.');
-  } catch (err) { toast(err.message, 'bad'); }
 }
 $('#rec-body').addEventListener('click', onRecClick);
 $('#rec-cards').addEventListener('click', onRecClick);
@@ -1368,7 +1320,7 @@ $('#rp-print-all').onclick = () => state.rp.length && printReports(null);
 function actClass(a){
   if (/Removed|Deleted|Blocked|Failed|Disabled/.test(a)) return 'bad';
   if (/Marked|Created|Enabled/.test(a)) return 'good';
-  if (/Reset|Changed|Edited|Exported|Downloaded|Shared|Printed/.test(a)) return 'gold';
+  if (/Reset|Changed|Exported|Downloaded|Shared|Printed/.test(a)) return 'gold';
   return '';
 }
 function actTime(t){ // "2026-09-24 14:05:33" -> { d: "24 Sep", h: "14:05", ymd }
@@ -1453,7 +1405,7 @@ function renderUsers(){
     const last = u.last ? new Date(u.last).toLocaleString([], { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
     return `<tr>
       <td>${esc(u.name)}<div class="cls">${esc(u.email)}</div></td>
-      <td>${u.role === 'admin' ? '<span class="badge">Admin</span>' : esc(ROLE_LABEL[u.role] || u.role)}</td>
+      <td>${u.role === 'admin' ? '<span class="badge">Admin</span>' : esc(roleLabel(u.role))}</td>
       <td><span class="badge ${u.active ? 'on' : 'off'}">${u.active ? 'Active' : 'Disabled'}</span></td>
       <td class="cls">${esc(last)}</td>
       <td>${me ? '<span class="cls">You</span>' : `<div class="actions">
@@ -1513,26 +1465,20 @@ $('#user-body').addEventListener('click', async e => {
   } catch (err) { toast(err.message, 'bad'); }
 });
 
-/* Faculty coordinators / captains: when the page comes back into view, re-sync the server clock (new day, attendance window) */
+/* Coordinators/captains: if the day changes, or the 9 AM–6 PM marking window opens or
+   closes, while the page is open, pick up the new state. */
 document.addEventListener('visibilitychange', async () => {
-  if (document.hidden || !state.user || isAdmin()) return;
+  if (document.hidden || !state.user || state.user.role === 'admin') return;
   try {
     const r = await api('init');
-    const newDay = r.config.today !== state.cfg.today;
-    setCfg(r.config);
-    if (newDay){
+    if (r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen){
+      state.cfg = r.config;
       const dates = dateRange(r.config.dateFrom, r.config.dateTo);
       state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
-      renderDateChips(dates);
+      renderDateChips(dates); renderRecords();
     }
-    renderWindowNote(); renderRecords();
   } catch (e) {}
 });
-/* Flip the "open / closed" state on screen at 9 AM and 6 PM without a refresh */
-setInterval(() => {
-  if (!state.user || isAdmin() || state.winOpen === windowOpen()) return;
-  renderWindowNote(); renderRecords();
-}, 15000);
 
 /* ---------- loading splash + start ---------- */
 const SPLASH_MIN_MS = 1500, SLOW_MSG = 'The server is taking longer than usual - trying again...';
