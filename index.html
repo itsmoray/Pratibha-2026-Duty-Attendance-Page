@@ -377,6 +377,64 @@ dialog::backdrop{background:rgba(43,26,26,.5)}
 setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remove(); }, 40000);
 </script>
 
+<!-- ============ PUBLIC ATTENDANCE CHECK ============ -->
+<main id="public-view" hidden>
+  <header class="hero compact">
+    <div class="hero-in">
+      <img class="hlogo" src="Logo.png" alt="Pratibha Arts Fest">
+      <div class="htxt">
+        <div class="eyebrow">Pratibha Arts Fest 2026-27</div>
+        <h1>Check <span>Attendance</span></h1>
+        <p>See if your duty hours were marked — no login needed</p>
+      </div>
+    </div>
+  </header>
+  <div class="statusbar">
+    <div class="sb-in">
+      <span>Read-only — for students to check their own duty attendance</span>
+      <span class="sb-act"><button class="linkbtn" id="pub-signin" type="button">Faculty / Admin sign in</button></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="step">
+        <h2><span class="n">1</span>Date</h2>
+        <div id="pub-date-chips"></div>
+      </div>
+      <div class="step" style="margin-bottom:0">
+        <h2><span class="n">2</span>Find your entry</h2>
+        <div class="filters">
+          <label>Course <select id="pub-course"></select></label>
+          <label>Semester <select id="pub-sem"></select></label>
+          <label>Batch <select id="pub-batch"></select></label>
+          <label>Search name <input id="pub-search" type="text" placeholder="Type your name" autocapitalize="words"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="tools">
+      <span class="cls" id="pub-note"></span>
+      <div class="actions"><button class="btn ghost small" id="pub-refresh" type="button">Refresh</button></div>
+    </div>
+    <div class="tablewrap" id="pub-table">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Class</th>
+          <th class="hc">1</th><th class="hc">2</th><th class="hc">3</th><th class="hc">4</th><th class="hc">5</th><th class="hc">6</th>
+          <th>Marked by</th>
+        </tr></thead>
+        <tbody id="pub-body"></tbody>
+      </table>
+    </div>
+    <div id="pub-cards" hidden></div>
+    <p class="cls" style="margin-top:8px">Don't see your name, or is an hour missing? Let your House Faculty Coordinator or Captain know so they can add it.</p>
+  </div>
+  <footer class="foot">
+    Marking attendance instead? <button class="linkbtn" id="pub-signin2" type="button">Sign in as Faculty / Admin</button>
+  </footer>
+</main>
+
 <!-- ============ LOGIN ============ -->
 <main id="login-view" hidden>
   <header class="hero compact">
@@ -402,6 +460,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
     </form>
   </div>
   <footer class="foot">
+    <button class="linkbtn" id="login-back" type="button">← Just checking your attendance? No login needed</button><br><br>
     Add this page to your phone's home screen for quick access.<br>
     iPhone: Share → Add to Home Screen<br>
     Android: menu → Install app
@@ -689,7 +748,8 @@ function setBusy(btn, on){
 const state = {
   token: store.get('pa_token'), user: null, cfg: null, batches: [],
   mk: { date: '', course: '', sem: '', batch: '', hours: new Set() },
-  sugCache: {}, recs: [], recsLoaded: false, users: [], rp: []
+  sugCache: {}, recs: [], recsLoaded: false, users: [], rp: [],
+  pub: { date: '', course: '', sem: '', batch: '', search: '' }, pubCfg: null, pubBatches: [], pubRows: []
 };
 
 /* ---------- API ---------- */
@@ -765,7 +825,12 @@ function modal({ title, message = '', fields = [], confirm = 'OK', cancel = 'Can
 function logAct(type, detail = ''){ api('logActivity', { type, detail }).catch(() => {}); }
 
 /* ---------- auth flow ---------- */
-function show(view){ $('#login-view').hidden = view !== 'login'; $('#app-view').hidden = view !== 'app'; window.scrollTo(0, 0); }
+function show(view){
+  $('#public-view').hidden = view !== 'public';
+  $('#login-view').hidden = view !== 'login';
+  $('#app-view').hidden = view !== 'app';
+  window.scrollTo(0, 0);
+}
 
 function signOut(expired){
   if (!expired && state.token) logAct('signout');
@@ -775,8 +840,11 @@ function signOut(expired){
   if (!expired) store.del('pa_draft');
   $('#password').value = '';
   $('#login-err').textContent = expired ? 'Your session expired. Please sign in again.' : '';
-  show('login');
+  if (expired) show('login'); else bootPublic();
 }
+
+$('#pub-signin').onclick = $('#pub-signin2').onclick = () => { $('#login-err').textContent = ''; show('login'); };
+$('#login-back').onclick = () => { $('#login-err').textContent = ''; show('public'); };
 
 $('#login-form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -795,6 +863,109 @@ async function boot(){
   state.user = r.user; state.cfg = r.config; state.batches = r.batches;
   buildApp(); show('app');
 }
+
+/* ---------- public (no login) attendance check ---------- */
+async function bootPublic(){
+  try {
+    const r = await api('publicInit');
+    state.pubCfg = r.config; state.pubBatches = r.batches;
+    const dates = dateRange(r.config.dateFrom, r.config.dateTo);
+    state.pub.date = dates.includes(r.config.today) ? r.config.today : dates[0];
+    renderPubDateChips(dates);
+    fillPubCourse();
+    show('public');
+    await loadPublic();
+  } catch (e) {
+    $('#login-err').textContent = e.message;
+    show('login');
+  }
+}
+function renderPubDateChips(dates){
+  const box = $('#pub-date-chips');
+  box.innerHTML = dates.map(d => {
+    const dt = parseYmd(d);
+    return `<button type="button" class="chip dt" data-d="${d}" aria-pressed="${d === state.pub.date}"><small>${DAYS[dt.getDay()]}</small><b>${dt.getDate()} ${MONTHS[dt.getMonth()]}</b></button>`;
+  }).join('');
+  $$('#pub-date-chips .chip').forEach(c => c.onclick = () => {
+    state.pub.date = c.dataset.d;
+    $$('#pub-date-chips .chip').forEach(x => x.setAttribute('aria-pressed', x === c));
+    loadPublic();
+  });
+}
+function fillPubSelect(sel, items, allLabel){
+  sel.innerHTML = `<option value="">${esc(allLabel)}</option>` + items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+}
+function fillPubCourse(){
+  fillPubSelect($('#pub-course'), uniq(state.pubBatches.map(b => b.course)), 'All courses');
+  onPubCourse();
+}
+function onPubCourse(){
+  state.pub.course = $('#pub-course').value;
+  const sems = uniq(state.pubBatches.filter(b => !state.pub.course || b.course === state.pub.course).map(b => b.semester));
+  fillPubSelect($('#pub-sem'), sems, 'All semesters');
+  onPubSem();
+}
+function onPubSem(){
+  state.pub.sem = $('#pub-sem').value;
+  const c = state.pub.course, s = state.pub.sem;
+  const bs = uniq(state.pubBatches.filter(b => (!c || b.course === c) && (!s || b.semester === s)).map(b => b.batch));
+  fillPubSelect($('#pub-batch'), bs, 'All batches');
+  onPubBatch();
+}
+function onPubBatch(){ state.pub.batch = $('#pub-batch').value; renderPublic(); }
+$('#pub-course').onchange = () => { onPubCourse(); renderPublic(); };
+$('#pub-sem').onchange = () => { onPubSem(); renderPublic(); };
+$('#pub-batch').onchange = onPubBatch;
+let pubSearchT;
+$('#pub-search').addEventListener('input', () => {
+  clearTimeout(pubSearchT);
+  pubSearchT = setTimeout(() => { state.pub.search = $('#pub-search').value.trim().toLowerCase(); renderPublic(); }, 150);
+});
+$('#pub-refresh').onclick = () => loadPublic();
+
+async function loadPublic(){
+  const note = $('#pub-note'); note.textContent = 'Loading…';
+  try {
+    const r = await api('publicCheck', { date: state.pub.date });
+    state.pubRows = r.rows.map(row => ({ name: row[0], course: row[1], sem: row[2], batch: row[3], hours: row[4], byName: row[5] }));
+    renderPublic();
+  } catch (e) { note.textContent = ''; toast(e.message, 'bad'); }
+}
+function filteredPub(){
+  const p = state.pub;
+  return state.pubRows.filter(r =>
+    (!p.course || r.course === p.course) &&
+    (!p.sem || r.sem === p.sem) &&
+    (!p.batch || r.batch === p.batch) &&
+    (!p.search || r.name.toLowerCase().includes(p.search))
+  ).sort((a, b) => a.name.localeCompare(b.name));
+}
+function renderPublic(){
+  if (!state.pubCfg) return;
+  const rows = filteredPub(), n = state.pubCfg.periods;
+  $('#pub-note').textContent = state.pubRows.length
+    ? `${rows.length} of ${state.pubRows.length} shown for ${fmtDate(state.pub.date)}` : `No attendance recorded for ${fmtDate(state.pub.date)} yet.`;
+  const phone = mq.matches;
+  $('#pub-table').hidden = phone; $('#pub-cards').hidden = !phone;
+  const emptyMsg = state.pubRows.length ? 'No entries match these filters.' : 'No attendance recorded for this date yet.';
+  if (phone){
+    $('#pub-cards').innerHTML = rows.length ? rows.map(r => {
+      const pills = Array.from({length: n}, (_,i) => { const h = i+1; return r.hours.includes(h) ? `<span class="hp on ro">${h}</span>` : `<span class="hp">${h}</span>`; }).join('');
+      return `<div class="rcard"><div class="rc-top"><b>${esc(r.name)}</b><span class="cls">${esc(r.sem)} · ${esc(r.batch)}</span></div>
+        <div class="cls">${esc(r.course)}</div><div class="rc-hours">${pills}</div>
+        <div class="rc-foot"><span class="cls">Marked by ${esc(r.byName)}</span></div></div>`;
+    }).join('') : `<div class="empty">${emptyMsg}</div>`;
+    return;
+  }
+  $('#pub-body').innerHTML = rows.length ? rows.map(r => {
+    const cells = Array.from({length: n}, (_,i) => {
+      const h = i+1;
+      return r.hours.includes(h) ? `<td class="hc"><span class="dot ro" title="Marked by ${esc(r.byName)}">●</span></td>` : '<td class="hc"></td>';
+    }).join('');
+    return `<tr><td>${esc(r.name)}</td><td class="cls">${esc(r.course)} · ${esc(r.sem)} · ${esc(r.batch)}</td>${cells}<td class="cls">${esc(r.byName)}</td></tr>`;
+  }).join('') : `<tr><td colspan="${n + 3}" class="empty">${emptyMsg}</td></tr>`;
+}
+mq.addEventListener('change', renderPublic);
 
 $('#btn-pw').onclick = async () => {
   const v = await modal({
@@ -1596,7 +1767,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catc
         }
       }
     }
-    if (!state.user) show('login');
+    if (!state.user) await bootPublic();
   } finally {
     clearTimeout(slow);
     hideSplash();
