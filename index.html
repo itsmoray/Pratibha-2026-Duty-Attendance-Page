@@ -153,6 +153,14 @@ tr:hover td{background:#fbf6e8}
 .dot{appearance:none; border:0; background:none; color:var(--teal); font-size:1.05rem; cursor:pointer; padding:2px 6px; border-radius:6px; line-height:1}
 .dot:hover{background:#f7dcdc; color:var(--bad)}
 .dot.ro{color:var(--gold); cursor:default} .dot.ro:hover{background:none; color:var(--gold)}
+/* Name/Class columns were auto-sizing way past their content on wide screens, leaving a big gap
+   before the hour columns. Pin proportions on the two attendance tables that share this shape. */
+#pub-table table, #rec-table table{table-layout:fixed}
+#pub-table th:nth-child(1), #pub-table td:nth-child(1),
+#rec-table th:nth-child(1), #rec-table td:nth-child(1){width:18%}
+#pub-table th:nth-child(2), #pub-table td:nth-child(2),
+#rec-table th:nth-child(2), #rec-table td:nth-child(2){width:28%}
+#rec-table th:nth-child(10), #rec-table td:nth-child(10){width:90px}
 .empty{padding:26px; text-align:center; color:var(--muted)}
 .datehead td{background:#efe6cf; font-family:var(--serif); font-weight:600; font-size:.92rem; color:var(--maroon); border-top:1px solid var(--gold-l)}
 
