@@ -191,6 +191,10 @@ td.tm small{display:block; color:var(--muted)}
 .datelock b{display:block; font-size:1.05rem; color:var(--maroon)}
 .datelock span{font-size:.82rem; color:var(--muted)}
 .datelock.off{background:#fbeaea; border-color:#e8bcbc; color:var(--bad); font-size:.9rem}
+.mwstatus{display:flex; align-items:center; gap:9px; margin-top:8px; padding:9px 14px; border-radius:10px; font-size:.86rem}
+.mwstatus .dot{width:8px; height:8px; border-radius:50%; background:currentColor; flex:none}
+.mwstatus.open{background:#d9eddf; color:#1f5a35}
+.mwstatus.closed{background:#fbeaea; color:var(--bad)}
 
 /* ---------- Users ---------- */
 .usergrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; align-items:end}
@@ -413,7 +417,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
   </header>
   <div class="statusbar">
     <div class="sb-in">
-      <span>Signed in as <b id="who-name"></b> <span class="badge" id="who-role"></span></span>
+      <span>Signed in as <b id="who-name"></b> <span class="badge" id="who-role"></span> <span class="badge on" id="who-override" hidden>After-hours access</span></span>
       <span class="sb-act">
         <button class="linkbtn" id="btn-install" type="button" hidden>Install app</button>
         <button class="linkbtn" id="btn-pw" type="button">Change password</button>
@@ -452,6 +456,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
         <div class="step">
           <h2><span class="n">1</span>Date</h2>
           <div id="date-chips"></div>
+          <div id="mark-window-note" class="mwstatus" hidden></div>
         </div>
 
         <div class="step">
@@ -605,7 +610,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
       </div>
       <div class="tablewrap" style="margin-top:14px">
         <table style="min-width:640px">
-          <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>After hours</th><th>Last login</th><th></th></tr></thead>
           <tbody id="user-body"></tbody>
         </table>
       </div>
@@ -729,6 +734,7 @@ function show(view){ $('#login-view').hidden = view !== 'login'; $('#app-view').
 
 function signOut(expired){
   if (!expired && state.token) logAct('signout');
+  if (markCountdownTimer){ clearInterval(markCountdownTimer); markCountdownTimer = null; }
   state.token = null; store.del('pa_token');
   state.user = null; state.recs = []; state.recsLoaded = false; state.sugCache = {};
   if (!expired) store.del('pa_draft');
@@ -791,6 +797,7 @@ function canEditRecords(){ return state.user.role === 'admin' || state.user.role
 function buildApp(){
   $('#who-name').textContent = state.user.name;
   $('#who-role').textContent = roleLabel(state.user.role);
+  $('#who-override').hidden = !state.user.override;
   $('#tab-users-btn').hidden = state.user.role !== 'admin';
   $('#tab-activity-btn').hidden = state.user.role !== 'admin';
   // House captains can only add attendance — no Records or Class reports tabs.
@@ -802,6 +809,7 @@ function buildApp(){
   const admin = state.user.role === 'admin';
   state.mk = { date: dates.includes(today) ? today : (admin ? dates[0] : ''), course: '', sem: '', batch: '', hours: new Set() };
   renderDateChips(dates); renderHourChips();
+  startMarkCountdown();
   fillCourse(); restoreLast();
   $('#names').value = store.get('pa_draft') || ''; updateCount();
   $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
@@ -826,10 +834,6 @@ function renderDateChips(dates){
   if (state.user.role !== 'admin'){
     // Coordinators/captains cannot choose the date: it is today, taken from the server clock.
     box.style.display = 'block';
-    if (state.mk.date && !state.cfg.markOpen){
-      box.innerHTML = `<div class="datelock off">${LOCK_SVG}<div>Attendance can only be marked between ${esc(fmtHourLabel(state.cfg.markStartHour))} and ${esc(fmtHourLabel(state.cfg.markEndHour))}.</div></div>`;
-      return;
-    }
     box.innerHTML = state.mk.date
       ? `<div class="datelock">${LOCK_SVG}<div><b>${esc(fmtDate(state.mk.date))}</b><span>Set automatically to today</span></div></div>`
       : `<div class="datelock off">${LOCK_SVG}<div>Attendance can only be marked on the fest days, ${esc(fmtShort(dates[0]))} – ${esc(fmtShort(dates[dates.length - 1]))}.</div></div>`;
@@ -845,6 +849,51 @@ function renderDateChips(dates){
     $$('#date-chips .chip').forEach(x => x.setAttribute('aria-pressed', x === c));
   });
 }
+
+/* ---------- Mark-window status banner (live countdown, shown every day) ---------- */
+function fmtCountdown(ms){
+  let s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600); s -= h * 3600;
+  const m = Math.floor(s / 60); s -= m * 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+let markCountdownTimer = null, lastMarkOpen = null;
+function renderMarkWindowStatus(){
+  const el = $('#mark-window-note');
+  if (!el) return;
+  const c = state.cfg;
+  if (state.user.role === 'admin' || !c || !c.markOpensAtMs || !c.markClosesAtMs || !state.mk.date){
+    el.hidden = true; return;
+  }
+  el.hidden = false;
+  if (state.user.override){
+    el.className = 'mwstatus open';
+    el.innerHTML = `<span class="dot"></span>After-hours access granted by admin — you can add or edit attendance any time today.`;
+    lastMarkOpen = c.markOpen = true;
+    return;
+  }
+  const now = Date.now(), isOpen = now >= c.markOpensAtMs && now < c.markClosesAtMs;
+  el.className = 'mwstatus ' + (isOpen ? 'open' : 'closed');
+  if (isOpen){
+    el.innerHTML = `<span class="dot"></span>Attendance marking is open — closes in <b>${fmtCountdown(c.markClosesAtMs - now)}</b> (${esc(fmtHourLabel(c.markEndHour))})`;
+  } else if (now < c.markOpensAtMs){
+    el.innerHTML = `<span class="dot"></span>Attendance marking is closed — opens in <b>${fmtCountdown(c.markOpensAtMs - now)}</b> (${esc(fmtHourLabel(c.markStartHour))})`;
+  } else {
+    el.innerHTML = `<span class="dot"></span>Attendance marking is closed for today — opens tomorrow at ${esc(fmtHourLabel(c.markStartHour))}`;
+  }
+  // Keep validation/edit permissions in sync live, without waiting for a server refresh.
+  if (lastMarkOpen !== null && lastMarkOpen !== isOpen) renderRecords();
+  lastMarkOpen = c.markOpen = isOpen;
+}
+function startMarkCountdown(){
+  if (markCountdownTimer) clearInterval(markCountdownTimer);
+  lastMarkOpen = null;
+  renderMarkWindowStatus();
+  markCountdownTimer = setInterval(renderMarkWindowStatus, 1000);
+}
+
 function renderHourChips(){
   const n = state.cfg.periods;
   $('#hour-chips').innerHTML = Array.from({length:n}, (_,i) =>
@@ -975,7 +1024,7 @@ $('#review-btn').onclick = async () => {
   const m = state.mk, err = $('#mark-err'); err.textContent = ''; $('#mark-result').innerHTML = '';
   const names = parseNames($('#names').value), hours = [...m.hours].sort((a,b) => a-b);
   if (!m.date) return err.textContent = state.user.role === 'admin' ? 'Pick a date.' : 'Attendance can only be marked on the fest days.';
-  if (state.user.role !== 'admin' && !state.cfg.markOpen) return err.textContent =
+  if (state.user.role !== 'admin' && !state.user.override && !state.cfg.markOpen) return err.textContent =
     `Attendance can only be marked between ${fmtHourLabel(state.cfg.markStartHour)} and ${fmtHourLabel(state.cfg.markEndHour)}.`;
   if (!m.course || !m.sem || !m.batch) return err.textContent = 'Select the course, semester and batch.';
   if (!hours.length) return err.textContent = 'Select at least one hour.';
@@ -1050,7 +1099,7 @@ const cmpRec = (a,b) =>
   a.date.localeCompare(b.date) || a.course.localeCompare(b.course) || a.sem.localeCompare(b.sem) ||
   a.batch.localeCompare(b.batch, undefined, {numeric:true}) || a.name.localeCompare(b.name);
 const canDel = r => state.user.role === 'admin' ||
-  (state.user.role === 'coordinator' && r.by === state.user.email && r.date === state.cfg.today && state.cfg.markOpen);
+  (state.user.role === 'coordinator' && r.by === state.user.email && r.date === state.cfg.today && (state.cfg.markOpen || state.user.override));
 
 function renderRecords(){
   if (!state.user) return;
@@ -1407,13 +1456,14 @@ function renderUsers(){
       <td>${esc(u.name)}<div class="cls">${esc(u.email)}</div></td>
       <td>${u.role === 'admin' ? '<span class="badge">Admin</span>' : esc(roleLabel(u.role))}</td>
       <td><span class="badge ${u.active ? 'on' : 'off'}">${u.active ? 'Active' : 'Disabled'}</span></td>
+      <td>${u.role === 'admin' ? '<span class="cls">—</span>' : `<span class="badge ${u.override ? 'on' : 'off'}">${u.override ? 'Granted' : 'Off'}</span>`}</td>
       <td class="cls">${esc(last)}</td>
-      <td>${me ? '<span class="cls">You</span>' : `<div class="actions">
-        <button class="btn ghost small" data-act="reset" data-e="${esc(u.email)}">Reset password</button>
+      <td><div class="actions">${u.role === 'admin' ? '' : `<button class="btn ghost small" data-act="override" data-e="${esc(u.email)}" data-o="${u.override ? 0 : 1}">${u.override ? 'Revoke after-hours' : 'Allow after-hours'}</button>`}
+        ${me ? '<span class="cls">You</span>' : `<button class="btn ghost small" data-act="reset" data-e="${esc(u.email)}">Reset password</button>
         <button class="btn ghost small" data-act="toggle" data-e="${esc(u.email)}" data-a="${u.active ? 0 : 1}">${u.active ? 'Disable' : 'Enable'}</button>
-        <button class="btn ghost small" data-act="del" data-e="${esc(u.email)}">Delete</button></div>`}</td>
+        <button class="btn ghost small" data-act="del" data-e="${esc(u.email)}">Delete</button>`}</div></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="5" class="empty">No accounts.</td></tr>';
+  }).join('') || '<tr><td colspan="6" class="empty">No accounts.</td></tr>';
 }
 function genPassword(){
   const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1457,6 +1507,10 @@ $('#user-body').addEventListener('click', async e => {
     } else if (act === 'toggle'){
       await api('setActive', { email, active: b.dataset.a === '1' });
       toast(b.dataset.a === '1' ? 'Account enabled.' : 'Account disabled.'); loadUsers();
+    } else if (act === 'override'){
+      const grant = b.dataset.o === '1';
+      await api('setOverride', { email, override: grant });
+      toast(grant ? 'After-hours access granted.' : 'After-hours access revoked.'); loadUsers();
     } else if (act === 'del'){
       const ok = await modal({ title: 'Delete account', message: `Delete <b>${esc(email)}</b>? Their past attendance entries stay in the records.`, confirm: 'Delete', danger: true });
       if (!ok) return;
@@ -1465,18 +1519,22 @@ $('#user-body').addEventListener('click', async e => {
   } catch (err) { toast(err.message, 'bad'); }
 });
 
-/* Coordinators/captains: if the day changes, or the 9 AM–6 PM marking window opens or
-   closes, while the page is open, pick up the new state. */
+/* Coordinators/captains: if the day changes, the 9 AM–6 PM marking window opens or closes,
+   or an admin grants/revokes after-hours access, while the page is open, pick up the new state. */
 document.addEventListener('visibilitychange', async () => {
   if (document.hidden || !state.user || state.user.role === 'admin') return;
   try {
     const r = await api('init');
-    if (r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen){
-      state.cfg = r.config;
+    const cfgChanged = r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen;
+    const overrideChanged = r.user.override !== state.user.override;
+    state.user = r.user; state.cfg = r.config;
+    if (cfgChanged){
       const dates = dateRange(r.config.dateFrom, r.config.dateTo);
       state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
-      renderDateChips(dates); renderRecords();
+      renderDateChips(dates);
     }
+    $('#who-override').hidden = !state.user.override;
+    if (cfgChanged || overrideChanged){ renderMarkWindowStatus(); renderRecords(); }
   } catch (e) {}
 });
 
