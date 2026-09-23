@@ -661,6 +661,16 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
     <!-- Users -->
     <section id="tab-users" hidden>
       <div class="panel">
+        <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:12px">Settings</h2>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <div style="max-width:520px">
+            <b>Allow all-date entry for Faculty Coordinators</b>
+            <p class="cls" style="margin-top:4px">Off by default: once a day ends, only Admins can add or edit that day's attendance. Turn this on to let House Faculty Coordinators mark attendance for any fest day, not just today. House Captains are always limited to today either way.</p>
+          </div>
+          <button class="btn ghost small" id="settings-alldates" type="button" data-on="0">Turn on</button>
+        </div>
+      </div>
+      <div class="panel">
         <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:12px">Create account</h2>
         <div class="usergrid">
           <label>Name <input id="nu-name" type="text" autocomplete="off"></label>
@@ -1007,6 +1017,8 @@ function roleLabel(role){
   return role === 'admin' ? 'Admin' : role === 'captain' ? 'House Captain' : 'House Faculty Coordinator';
 }
 function canEditRecords(){ return state.user.role === 'admin' || state.user.role === 'coordinator'; }
+// Admins always pick any fest date; coordinators only when the admin has turned on all-date entry; captains never.
+function canPickAnyDate(){ return state.user.role === 'admin' || (state.user.role === 'coordinator' && !!state.cfg.allowAllDates); }
 
 function buildApp(){
   $('#who-name').textContent = state.user.name;
@@ -1020,14 +1032,14 @@ function buildApp(){
 
   const dates = dateRange(state.cfg.dateFrom, state.cfg.dateTo);
   const today = state.cfg.today || ymd(new Date());
-  const admin = state.user.role === 'admin';
-  state.mk = { date: dates.includes(today) ? today : (admin ? dates[0] : ''), course: '', sem: '', batch: '', hours: new Set() };
+  state.mk = { date: dates.includes(today) ? today : (canPickAnyDate() ? dates[0] : ''), course: '', sem: '', batch: '', hours: new Set() };
   renderDateChips(dates); renderHourChips();
   startMarkCountdown();
   fillCourse(); restoreLast();
   $('#names').value = store.get('pa_draft') || ''; updateCount();
   $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
   initRecordFilters(dates); initReportFilters(dates);
+  if (state.user.role === 'admin') renderSettings();
   switchTab('mark');
 }
 
@@ -1045,8 +1057,8 @@ function switchTab(name){
 const LOCK_SVG = '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
 function renderDateChips(dates){
   const box = $('#date-chips');
-  if (state.user.role !== 'admin'){
-    // Coordinators/captains cannot choose the date: it is today, taken from the server clock.
+  if (!canPickAnyDate()){
+    // Captains (always) and coordinators (unless the admin turned on all-date entry) are locked to today.
     box.style.display = 'block';
     box.innerHTML = state.mk.date
       ? `<div class="datelock">${LOCK_SVG}<div><b>${esc(fmtDate(state.mk.date))}</b><span>Set automatically to today</span></div></div>`
@@ -1237,7 +1249,7 @@ $('#sug-all').onclick = () => {
 $('#review-btn').onclick = async () => {
   const m = state.mk, err = $('#mark-err'); err.textContent = ''; $('#mark-result').innerHTML = '';
   const names = parseNames($('#names').value), hours = [...m.hours].sort((a,b) => a-b);
-  if (!m.date) return err.textContent = state.user.role === 'admin' ? 'Pick a date.' : 'Attendance can only be marked on the fest days.';
+  if (!m.date) return err.textContent = canPickAnyDate() ? 'Pick a date.' : 'Attendance can only be marked on the fest days.';
   if (state.user.role !== 'admin' && !state.user.override && !state.cfg.markOpen) return err.textContent =
     `Attendance can only be marked between ${fmtHourLabel(state.cfg.markStartHour)} and ${fmtHourLabel(state.cfg.markEndHour)}.`;
   if (!m.course || !m.sem || !m.batch) return err.textContent = 'Select the course, semester and batch.';
@@ -1659,9 +1671,31 @@ $('#act-export').onclick = () => {
 /* ---------- Users (admin) ---------- */
 async function loadUsers(){
   if (state.user.role !== 'admin') return;
-  try { const r = await api('listUsers'); state.users = r.users; renderUsers(); }
+  try {
+    const r = await api('listUsers');
+    state.users = r.users;
+    state.cfg.allowAllDates = r.allowAllDates;
+    renderUsers(); renderSettings();
+  }
   catch (e) { toast(e.message, 'bad'); }
 }
+function renderSettings(){
+  const b = $('#settings-alldates'); if (!b) return;
+  const on = !!state.cfg.allowAllDates;
+  b.textContent = on ? 'Turn off' : 'Turn on';
+  b.dataset.on = on ? '1' : '0';
+}
+$('#settings-alldates').onclick = async () => {
+  const btn = $('#settings-alldates'), grant = btn.dataset.on !== '1';
+  setBusy(btn, true);
+  try {
+    await api('setAllowAllDates', { allow: grant });
+    state.cfg.allowAllDates = grant;
+    renderSettings();
+    toast(grant ? 'Faculty coordinators can now mark attendance for any fest date.' : 'Faculty coordinators are limited to today again.');
+  } catch (e) { toast(e.message, 'bad'); }
+  finally { setBusy(btn, false); }
+};
 function renderUsers(){
   $('#user-body').innerHTML = state.users.map(u => {
     const me = u.email === state.user.email;
@@ -1739,7 +1773,7 @@ document.addEventListener('visibilitychange', async () => {
   if (document.hidden || !state.user || state.user.role === 'admin') return;
   try {
     const r = await api('init');
-    const cfgChanged = r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen;
+    const cfgChanged = r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen || r.config.allowAllDates !== state.cfg.allowAllDates;
     const overrideChanged = r.user.override !== state.user.override;
     state.user = r.user; state.cfg = r.config;
     if (cfgChanged){
