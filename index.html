@@ -666,21 +666,21 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
     <section id="tab-users" hidden>
       <div class="panel">
         <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:12px">Settings</h2>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
-          <div style="max-width:520px">
-            <b>All teachers — Allow all-date entry</b>
-            <p class="cls" style="margin-top:4px">Off by default: once a day ends, only Admins can add or edit that day's attendance. Turn this on to let every House Faculty Coordinator mark attendance for any fest day at once, not just today. House Captains are always limited to today either way. To open this for just one coordinator instead, use the "All-dates" button next to their name below.</p>
+        <div class="settings-grid">
+          <div class="panel">
+            <div class="settings-body">
+              <b>All teachers — Allow all-date entry</b>
+              <p class="cls" style="margin-top:4px">Off by default: once a day ends, only Admins can add or edit that day's attendance. Turn this on to let every House Faculty Coordinator mark attendance for any fest day at once, not just today. House Captains are always limited to today either way. To open this for just one coordinator instead, use the "All-dates" button next to their name below.</p>
+            </div>
+            <button class="btn ghost small" id="settings-alldates" type="button" data-on="0">Turn on</button>
           </div>
-          <button class="btn ghost small" id="settings-alldates" type="button" data-on="0">Turn on</button>
-        </div>
-      </div>
-      <div class="panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
-          <div style="max-width:520px">
-            <b>All teachers — After-hours access</b>
-            <p class="cls" style="margin-top:4px">Off by default: attendance can only be marked between the daily marking hours. Turn this on to let every Faculty Coordinator and House Captain add or edit attendance any time, all at once. To grant it to just one account instead, use the "After hours" button next to their name below.</p>
+          <div class="panel">
+            <div class="settings-body">
+              <b>All teachers — After-hours access</b>
+              <p class="cls" style="margin-top:4px">Off by default: attendance can only be marked between the daily marking hours. Turn this on to let every Faculty Coordinator and House Captain add or edit attendance any time, all at once. To grant it to just one account instead, use the "After hours" button next to their name below.</p>
+            </div>
+            <button class="btn ghost small" id="settings-afterhours" type="button" data-on="0">Turn on</button>
           </div>
-          <button class="btn ghost small" id="settings-afterhours" type="button" data-on="0">Turn on</button>
         </div>
       </div>
       <div class="panel">
@@ -1241,13 +1241,16 @@ function renderSuggestions(){
   const list = state.sugCache[batchKey()] || [];
   $('#sugbox').hidden = list.length === 0;
   $('#sug-chips').innerHTML = list.map((n, i) => `<button type="button" class="chip sug" data-i="${i}" aria-pressed="false">${esc(n)}</button>`).join('');
-  $$('#sug-chips .chip').forEach(c => c.onclick = () => toggleName(list[+c.dataset.i]));
+  $$('#sug-chips .chip').forEach(c => c.onclick = () => { const n = list[+c.dataset.i]; if (n) toggleName(n); });
   syncSuggestions();
 }
 function syncSuggestions(){
   const cur = new Set(parseNames($('#names').value).map(n => n.toLowerCase()));
   const list = state.sugCache[batchKey()] || [];
-  $$('#sug-chips .chip').forEach(c => c.setAttribute('aria-pressed', cur.has(list[+c.dataset.i].toLowerCase())));
+  $$('#sug-chips .chip').forEach(c => {
+    const n = list[+c.dataset.i];
+    c.setAttribute('aria-pressed', !!n && cur.has(n.toLowerCase()));
+  });
 }
 function setNames(names){ $('#names').value = names.join('\n'); store.set('pa_draft', $('#names').value); updateCount(); }
 function toggleName(n){
@@ -1287,7 +1290,7 @@ $('#review-btn').onclick = async () => {
   const btn = $('#review-btn'); setBusy(btn, true);
   try {
     const r = await api('submit', { date: m.date, course: m.course, semester: m.sem, batch: m.batch, hours, names });
-    state.sugCache[batchKey()] = null; state.recsLoaded = false;
+    state.sugCache[batchKey()] = null; $('#sug-chips').innerHTML = ''; $('#sugbox').hidden = true; state.recsLoaded = false;
     const dup = r.skipped ? `<br>${r.skipped} hour entr${r.skipped === 1 ? 'y was' : 'ies were'} already recorded and skipped.` : '';
     $('#mark-result').innerHTML = `<div class="result ${r.added ? 'ok' : 'warn'}">
       ${r.added ? `Saved ${r.added} hour entr${r.added === 1 ? 'y' : 'ies'} for ${r.students} student${r.students === 1 ? '' : 's'}.` : 'Nothing new to save.'}${dup}</div>`;
