@@ -661,16 +661,6 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
     <!-- Users -->
     <section id="tab-users" hidden>
       <div class="panel">
-        <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:12px">Settings</h2>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
-          <div style="max-width:520px">
-            <b>Allow all-date entry for Faculty Coordinators</b>
-            <p class="cls" style="margin-top:4px">Off by default: once a day ends, only Admins can add or edit that day's attendance. Turn this on to let House Faculty Coordinators mark attendance for any fest day, not just today. House Captains are always limited to today either way.</p>
-          </div>
-          <button class="btn ghost small" id="settings-alldates" type="button" data-on="0">Turn on</button>
-        </div>
-      </div>
-      <div class="panel">
         <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:12px">Create account</h2>
         <div class="usergrid">
           <label>Name <input id="nu-name" type="text" autocomplete="off"></label>
@@ -692,7 +682,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
       </div>
       <div class="tablewrap" style="margin-top:14px">
         <table style="min-width:640px">
-          <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>After hours</th><th>Last login</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>After hours</th><th>All dates</th><th>Last login</th><th></th></tr></thead>
           <tbody id="user-body"></tbody>
         </table>
       </div>
@@ -1017,8 +1007,8 @@ function roleLabel(role){
   return role === 'admin' ? 'Admin' : role === 'captain' ? 'House Captain' : 'House Faculty Coordinator';
 }
 function canEditRecords(){ return state.user.role === 'admin' || state.user.role === 'coordinator'; }
-// Admins always pick any fest date; coordinators only when the admin has turned on all-date entry; captains never.
-function canPickAnyDate(){ return state.user.role === 'admin' || (state.user.role === 'coordinator' && !!state.cfg.allowAllDates); }
+// Admins always pick any fest date; a coordinator only when the admin has granted them all-date access individually; captains never.
+function canPickAnyDate(){ return state.user.role === 'admin' || (state.user.role === 'coordinator' && !!state.user.allDates); }
 
 function buildApp(){
   $('#who-name').textContent = state.user.name;
@@ -1039,7 +1029,6 @@ function buildApp(){
   $('#names').value = store.get('pa_draft') || ''; updateCount();
   $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
   initRecordFilters(dates); initReportFilters(dates);
-  if (state.user.role === 'admin') renderSettings();
   switchTab('mark');
 }
 
@@ -1058,7 +1047,7 @@ const LOCK_SVG = '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height=
 function renderDateChips(dates){
   const box = $('#date-chips');
   if (!canPickAnyDate()){
-    // Captains (always) and coordinators (unless the admin turned on all-date entry) are locked to today.
+    // Captains (always) and coordinators without individual all-date access are locked to today.
     box.style.display = 'block';
     box.innerHTML = state.mk.date
       ? `<div class="datelock">${LOCK_SVG}<div><b>${esc(fmtDate(state.mk.date))}</b><span>Set automatically to today</span></div></div>`
@@ -1671,47 +1660,28 @@ $('#act-export').onclick = () => {
 /* ---------- Users (admin) ---------- */
 async function loadUsers(){
   if (state.user.role !== 'admin') return;
-  try {
-    const r = await api('listUsers');
-    state.users = r.users;
-    state.cfg.allowAllDates = r.allowAllDates;
-    renderUsers(); renderSettings();
-  }
+  try { const r = await api('listUsers'); state.users = r.users; renderUsers(); }
   catch (e) { toast(e.message, 'bad'); }
 }
-function renderSettings(){
-  const b = $('#settings-alldates'); if (!b) return;
-  const on = !!state.cfg.allowAllDates;
-  b.textContent = on ? 'Turn off' : 'Turn on';
-  b.dataset.on = on ? '1' : '0';
-}
-$('#settings-alldates').onclick = async () => {
-  const btn = $('#settings-alldates'), grant = btn.dataset.on !== '1';
-  setBusy(btn, true);
-  try {
-    await api('setAllowAllDates', { allow: grant });
-    state.cfg.allowAllDates = grant;
-    renderSettings();
-    toast(grant ? 'Faculty coordinators can now mark attendance for any fest date.' : 'Faculty coordinators are limited to today again.');
-  } catch (e) { toast(e.message, 'bad'); }
-  finally { setBusy(btn, false); }
-};
 function renderUsers(){
   $('#user-body').innerHTML = state.users.map(u => {
     const me = u.email === state.user.email;
+    const isCoord = u.role === 'coordinator';
     const last = u.last ? new Date(u.last).toLocaleString([], { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
     return `<tr>
       <td>${esc(u.name)}<div class="cls">${esc(u.email)}</div></td>
       <td>${u.role === 'admin' ? '<span class="badge">Admin</span>' : esc(roleLabel(u.role))}</td>
       <td><span class="badge ${u.active ? 'on' : 'off'}">${u.active ? 'Active' : 'Disabled'}</span></td>
       <td>${u.role === 'admin' ? '<span class="cls">—</span>' : `<span class="badge ${u.override ? 'on' : 'off'}">${u.override ? 'Granted' : 'Off'}</span>`}</td>
+      <td>${isCoord ? `<span class="badge ${u.allDates ? 'on' : 'off'}">${u.allDates ? 'Granted' : 'Off'}</span>` : '<span class="cls">—</span>'}</td>
       <td class="cls">${esc(last)}</td>
       <td><div class="actions">${u.role === 'admin' ? '' : `<button class="btn ghost small" data-act="override" data-e="${esc(u.email)}" data-o="${u.override ? 0 : 1}">${u.override ? 'Revoke after-hours' : 'Allow after-hours'}</button>`}
+        ${isCoord ? `<button class="btn ghost small" data-act="alldates" data-e="${esc(u.email)}" data-o="${u.allDates ? 0 : 1}">${u.allDates ? 'Revoke all-date access' : 'Allow all-date access'}</button>` : ''}
         ${me ? '<span class="cls">You</span>' : `<button class="btn ghost small" data-act="reset" data-e="${esc(u.email)}">Reset password</button>
         <button class="btn ghost small" data-act="toggle" data-e="${esc(u.email)}" data-a="${u.active ? 0 : 1}">${u.active ? 'Disable' : 'Enable'}</button>
         <button class="btn ghost small" data-act="del" data-e="${esc(u.email)}">Delete</button>`}</div></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" class="empty">No accounts.</td></tr>';
+  }).join('') || '<tr><td colspan="7" class="empty">No accounts.</td></tr>';
 }
 function genPassword(){
   const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1759,6 +1729,10 @@ $('#user-body').addEventListener('click', async e => {
       const grant = b.dataset.o === '1';
       await api('setOverride', { email, override: grant });
       toast(grant ? 'After-hours access granted.' : 'After-hours access revoked.'); loadUsers();
+    } else if (act === 'alldates'){
+      const grant = b.dataset.o === '1';
+      await api('setAllDates', { email, allDates: grant });
+      toast(grant ? 'All-date access granted.' : 'All-date access revoked.'); loadUsers();
     } else if (act === 'del'){
       const ok = await modal({ title: 'Delete account', message: `Delete <b>${esc(email)}</b>? Their past attendance entries stay in the records.`, confirm: 'Delete', danger: true });
       if (!ok) return;
@@ -1768,21 +1742,22 @@ $('#user-body').addEventListener('click', async e => {
 });
 
 /* Coordinators/captains: if the day changes, the 9 AM–6 PM marking window opens or closes,
-   or an admin grants/revokes after-hours access, while the page is open, pick up the new state. */
+   or an admin grants/revokes after-hours or all-date access, while the page is open, pick up the new state. */
 document.addEventListener('visibilitychange', async () => {
   if (document.hidden || !state.user || state.user.role === 'admin') return;
   try {
     const r = await api('init');
-    const cfgChanged = r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen || r.config.allowAllDates !== state.cfg.allowAllDates;
+    const cfgChanged = r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen;
     const overrideChanged = r.user.override !== state.user.override;
+    const allDatesChanged = r.user.allDates !== state.user.allDates;
     state.user = r.user; state.cfg = r.config;
-    if (cfgChanged){
+    if (cfgChanged || allDatesChanged){
       const dates = dateRange(r.config.dateFrom, r.config.dateTo);
-      state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
+      state.mk.date = dates.includes(r.config.today) ? r.config.today : (canPickAnyDate() ? dates[0] : '');
       renderDateChips(dates);
     }
     $('#who-override').hidden = !state.user.override;
-    if (cfgChanged || overrideChanged){ renderMarkWindowStatus(); renderRecords(); }
+    if (cfgChanged || overrideChanged || allDatesChanged){ renderMarkWindowStatus(); renderRecords(); }
   } catch (e) {}
 });
 
