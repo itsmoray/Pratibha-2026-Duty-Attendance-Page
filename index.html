@@ -1486,7 +1486,7 @@ $('#rec-export').onclick = () => {
   const ws = XLSX.utils.aoa_to_sheet([head, ...data]);
   ws['!cols'] = [{wch:11},{wch:28},{wch:26},{wch:8},{wch:14}, ...Array(n).fill({wch:4}), {wch:11},{wch:22}];
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Records');
-  XLSX.writeFile(wb, `Pratibha_Duty_Attendance_Records_${ymd(new Date())}.xlsx`);
+  XLSX.writeFile(wb, `Pratibha_2026-27_Duty_Attendance_Records_${ymd(new Date())}.xlsx`);
   logAct('export_records', `${rows.length} entries`);
 };
 
@@ -1767,14 +1767,14 @@ async function exportAllCourses(){
     state.rp.forEach(c => { if (!groups.has(c.course)) groups.set(c.course, []); groups.get(c.course).push(c); });
     const zip = new JSZip(), taken = new Set();
     for (const [course, list] of groups){
-      let base = `Duty_Attendance_${safe(course)}`, k = 2, fn = base;
+      let base = `Pratibha_2026-27_Duty_Attendance_${safe(course)}`, k = 2, fn = base;
       while (taken.has(fn.toLowerCase())) fn = `${base}_${k++}`;
       taken.add(fn.toLowerCase());
       zip.file(fn + '.xlsx', await buildCourseWorkbook(course, list, period));
     }
     const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = `Pratibha_Duty_Attendance_All_Courses_${ymd(new Date())}.zip`;
+    a.href = URL.createObjectURL(blob); a.download = `Pratibha_2026-27_Duty_Attendance_All_Courses_${ymd(new Date())}.zip`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
     toast(`${groups.size} course file${groups.size === 1 ? '' : 's'} downloaded in one ZIP.`);
@@ -1795,11 +1795,11 @@ $('#rp-list').addEventListener('click', e => {
   const b = e.target.closest('button[data-act]'); if (!b) return;
   const c = state.rp[+b.dataset.i]; if (!c) return;
   if (b.dataset.act === 'print') printReports(+b.dataset.i);
-  else exportClasses([c], `Duty_Attendance_${safe(c.course)}_${safe(c.sem)}_${safe(c.batch)}.xlsx`, b.dataset.act === 'share');
+  else exportClasses([c], `Pratibha_2026-27_Duty_Attendance_${safe(c.course)}_${safe(c.sem)}_${safe(c.batch)}.xlsx`, b.dataset.act === 'share');
 });
 function allName(){
   const c = $('#rp-course').value, s = $('#rp-sem').value;
-  return 'Duty_Attendance_' + [c ? safe(c) : 'All_Classes', s ? safe(s) : ''].filter(Boolean).join('_') + '.xlsx';
+  return 'Pratibha_2026-27_Duty_Attendance_' + [c ? safe(c) : 'All_Classes', s ? safe(s) : ''].filter(Boolean).join('_') + '.xlsx';
 }
 $('#rp-xlsx-all').onclick = () => state.rp.length && exportClasses(state.rp, allName(), false);
 $('#rp-share-all').onclick = () => state.rp.length && exportClasses(state.rp, allName(), true);
@@ -1879,7 +1879,7 @@ $('#act-export').onclick = () => {
   const ws = XLSX.utils.aoa_to_sheet([['Time','Email','Name','Role','Action','Details'], ...rows.map(x => [x.time, x.email, x.name, x.role, x.action, x.detail])]);
   ws['!cols'] = [{wch:20},{wch:30},{wch:20},{wch:12},{wch:28},{wch:90}];
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Activity log');
-  XLSX.writeFile(wb, `Pratibha_Duty_Attendance_Activity_${ymd(new Date())}.xlsx`);
+  XLSX.writeFile(wb, `Pratibha_2026-27_Duty_Attendance_Activity_${ymd(new Date())}.xlsx`);
 };
 
 /* ---------- Users (admin) ---------- */
