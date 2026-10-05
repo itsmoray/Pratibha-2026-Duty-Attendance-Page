@@ -624,6 +624,7 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
         </div>
         <div class="actions" style="margin-top:14px">
           <button class="btn small" id="rp-xlsx-all" type="button">Download all (Excel)</button>
+          <button class="btn small" id="rp-zip-all" type="button" title="One styled Excel file per course, bundled in a ZIP">Export all courses (ZIP)</button>
           <button class="btn ghost small" id="rp-share-all" type="button" hidden>Share all</button>
           <button class="btn ghost small" id="rp-print-all" type="button">Print / PDF all</button>
           <button class="btn ghost small" id="rp-refresh" type="button">Refresh</button>
@@ -696,6 +697,23 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
             </div>
           </div>
         </div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:4px">Bulk full-day entry</h2>
+        <p class="cls" style="margin-bottom:12px">Mark every hour (full day) for one or more students of a class across a range of dates, in one go. Hours that are already marked are left as they are, so nothing is duplicated.</p>
+        <div class="usergrid">
+          <label>Course <select id="bk-course"></select></label>
+          <label>Semester <select id="bk-sem"></select></label>
+          <label>Batch <select id="bk-batch"></select></label>
+          <label>From date <select id="bk-from"></select></label>
+          <label>To date <select id="bk-to"></select></label>
+        </div>
+        <label style="display:block; margin-top:12px">Students
+          <textarea id="bk-names" placeholder="One name per line" spellcheck="false" autocapitalize="words" style="min-height:110px"></textarea>
+        </label>
+        <div class="err" id="bk-err" role="alert"></div>
+        <div style="margin-top:10px"><button class="btn" id="bk-go" type="button">Review &amp; mark full day</button></div>
+        <div id="bk-result"></div>
       </div>
       <div class="panel" style="margin-top:14px">
         <h2 style="font-size:1rem;color:var(--maroon);margin-bottom:12px">Create account</h2>
@@ -1085,7 +1103,7 @@ function buildApp(){
   $('#names').value = store.get('pa_draft') || ''; updateCount();
   $('#mark-result').innerHTML = ''; $('#mark-err').textContent = '';
   initRecordFilters(dates); initReportFilters(dates);
-  if (state.user.role === 'admin') renderSettings();
+  if (state.user.role === 'admin'){ renderSettings(); initBulk(); }
   switchTab('mark');
 }
 
@@ -1529,7 +1547,7 @@ function renderReports(){
   if (!state.recsLoaded){ return; }
   const classes = state.rp = buildClassReports();
   const has = classes.length > 0;
-  ['#rp-xlsx-all','#rp-print-all','#rp-share-all'].forEach(s => { if (s !== '#rp-share-all') $(s).disabled = !has; });
+  ['#rp-xlsx-all','#rp-zip-all','#rp-print-all','#rp-share-all'].forEach(s => { if (s !== '#rp-share-all') $(s).disabled = !has; });
   if (!has){ list.innerHTML = '<div class="panel empty" style="margin-top:14px">No attendance recorded for these filters yet.</div>'; return; }
   const period = periodText(), canShare = !$('#rp-share-all').hidden;
 
@@ -1618,6 +1636,153 @@ async function exportClasses(list, filename, share){
   XLSX.writeFile(wb, filename);
   logAct('report_xlsx', what);
 }
+/* ---------- Export all courses: one styled Excel file per course, bundled in a ZIP ---------- */
+// ExcelJS (styling) and JSZip are only loaded when this is used, so the app itself stays fast to open.
+const loadScript = src => new Promise((res, rej) => {
+  const s = document.createElement('script'); s.src = src; s.onload = res;
+  s.onerror = () => rej(new Error('Could not load the export library. Check your connection.'));
+  document.head.appendChild(s);
+});
+async function ensureZipLibs(){
+  if (typeof ExcelJS === 'undefined') await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js');
+  if (typeof JSZip === 'undefined') await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+}
+const XL = { maroon: 'FF511C24', cream: 'FFF6EAD0', gold: 'FFB8924A', band: 'FFFBF7EC', foot: 'FFEFE6CF', line: 'FFD9CFB8', ok: 'FFCFE8D5', okInk: 'FF1F5A35', mute: 'FFA89E86', ink: 'FF2B2B2B' };
+const xlFill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+const xlLine = { style: 'thin', color: { argb: XL.line } };
+const xlBox = { top: xlLine, left: xlLine, bottom: xlLine, right: xlLine };
+const xlFont = (o = {}) => Object.assign({ name: 'Calibri', size: 11, color: { argb: XL.ink } }, o);
+
+// Title block shared by every sheet: maroon banner, class/course line, period line.
+function xlBanner(ws, last, title, line2, period){
+  const row = (r, text, o) => {
+    ws.mergeCells(r, 1, r, last);
+    const c = ws.getCell(r, 1); c.value = text;
+    c.font = xlFont(o.font); c.alignment = { vertical: 'middle', horizontal: 'left', indent: 1, wrapText: !!o.wrap };
+    if (o.fill) c.fill = xlFill(o.fill);
+    ws.getRow(r).height = o.h;
+  };
+  row(1, title, { fill: XL.maroon, h: 30, font: { size: 15, bold: true, color: { argb: XL.cream } } });
+  row(2, line2, { h: 22, font: { size: 12, bold: true, color: { argb: XL.maroon } } });
+  row(3, `Period: ${period}   ·   Generated: ${fmtDate(ymd(new Date()))} ${new Date().getFullYear()}`, { h: 18, font: { size: 10, color: { argb: XL.mute } } });
+  ws.getRow(4).height = 6;
+  for (let c = 1; c <= last; c++) ws.getCell(4, c).fill = xlFill(XL.gold);
+}
+function xlHeaderCell(cell){
+  cell.font = xlFont({ bold: true, color: { argb: XL.cream } }); cell.fill = xlFill(XL.maroon); cell.border = xlBox;
+  cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+}
+function xlSetup(ws, headerRow){
+  ws.views = [{ state: 'frozen', xSplit: 2, ySplit: headerRow, showGridLines: false }];
+  ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+    margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 }, printTitlesRow: `${headerRow}:${headerRow}` };
+  ws.headerFooter = { oddFooter: '&LPratibha Arts Fest 2026-27&CPage &P of &N&R&D' };
+}
+
+function xlClassSheet(wb, name, c, period){
+  const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: XL.maroon } } });
+  const nd = c.dates.length, last = 3 + nd, H = 6;
+  ws.columns = [{ width: 7 }, { width: 32 }, ...c.dates.map(() => ({ width: 11 })), { width: 12 }];
+  xlBanner(ws, last, 'Pratibha Arts Fest 2026-27 · Duty Attendance Report', `Class: ${c.course} · ${c.sem} · ${c.batch}`, period);
+  ws.mergeCells(5, 1, 5, last);
+  const note = ws.getCell(5, 1); note.value = 'Students below were on duty for Pratibha Arts Fest (practice / volunteering / decoration) during the hours shown.';
+  note.font = xlFont({ italic: true, size: 10, color: { argb: XL.mute } }); note.alignment = { vertical: 'middle', indent: 1 };
+  // header
+  const head = ws.getRow(H); head.height = 36;
+  const labels = ['Sl. No', 'Name', ...c.dates.map(d => { const dt = parseYmd(d); return `${dt.getDate()} ${MONTHS[dt.getMonth()]}\n${DAYS[dt.getDay()]}`; }), 'Total hours'];
+  labels.forEach((t, i) => { const cell = head.getCell(i + 1); cell.value = t; xlHeaderCell(cell); });
+  head.getCell(2).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+  // rows
+  c.students.forEach((s, i) => {
+    const r = ws.getRow(H + 1 + i); r.height = 20;
+    const band = i % 2 ? XL.band : 'FFFFFFFF';
+    const vals = [i + 1, s.name, ...c.dates.map(d => s.byDate[d] ? fmtHours(s.byDate[d]) : '–'), s.total];
+    vals.forEach((v, k) => {
+      const cell = r.getCell(k + 1); cell.value = v; cell.border = xlBox; cell.font = xlFont(); cell.fill = xlFill(band);
+      cell.alignment = { vertical: 'middle', horizontal: k === 1 ? 'left' : 'center', indent: k === 1 ? 1 : 0 };
+      if (k >= 2 && k < last - 1){
+        if (v === '–') cell.font = xlFont({ color: { argb: XL.mute } });
+        else { cell.fill = xlFill(XL.ok); cell.font = xlFont({ bold: true, color: { argb: XL.okInk } }); }
+      }
+      if (k === last - 1) cell.font = xlFont({ bold: true, color: { argb: XL.maroon } });
+    });
+  });
+  // footer totals
+  const fr = ws.getRow(H + 1 + c.students.length); fr.height = 22;
+  const fvals = ['', 'Students on duty', ...c.dates.map(d => c.students.filter(s => s.byDate[d]).length), c.totalHours];
+  fvals.forEach((v, k) => {
+    const cell = fr.getCell(k + 1); cell.value = v; cell.fill = xlFill(XL.foot); cell.border = xlBox;
+    cell.font = xlFont({ bold: true, color: { argb: XL.maroon } });
+    cell.alignment = { vertical: 'middle', horizontal: k === 1 ? 'left' : 'center', indent: k === 1 ? 1 : 0 };
+  });
+  ws.autoFilter = { from: { row: H, column: 1 }, to: { row: H + c.students.length, column: last } };
+  // signature line
+  const sr = H + c.students.length + 4;
+  ws.getCell(sr, 2).value = 'Class Advisor signature: ______________________';
+  ws.getCell(sr, Math.max(4, last - 2)).value = 'Date: ______________';
+  [2, Math.max(4, last - 2)].forEach(k => { ws.getCell(sr, k).font = xlFont({ size: 10 }); });
+  xlSetup(ws, H);
+}
+
+function xlSummarySheet(wb, name, course, list, period){
+  const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: XL.gold } } });
+  const last = 5, H = 6;
+  ws.columns = [{ width: 12 }, { width: 22 }, { width: 12 }, { width: 14 }, { width: 38 }];
+  xlBanner(ws, last, 'Pratibha Arts Fest 2026-27 · Duty Attendance Summary', `Course: ${course}`, period);
+  ws.getRow(5).height = 6;
+  const head = ws.getRow(H); head.height = 28;
+  ['Semester', 'Batch', 'Students', 'Student-hours', 'Days on duty'].forEach((t, i) => { const cell = head.getCell(i + 1); cell.value = t; xlHeaderCell(cell); });
+  list.forEach((c, i) => {
+    const r = ws.getRow(H + 1 + i); r.height = 20;
+    const days = c.dates.length ? `${c.dates.length} day${c.dates.length === 1 ? '' : 's'} (${fmtShort(c.dates[0])} – ${fmtShort(c.dates[c.dates.length - 1])})` : '';
+    [c.sem, c.batch, c.students.length, c.totalHours, days].forEach((v, k) => {
+      const cell = r.getCell(k + 1); cell.value = v; cell.border = xlBox; cell.font = xlFont();
+      cell.fill = xlFill(i % 2 ? XL.band : 'FFFFFFFF'); cell.alignment = { vertical: 'middle', horizontal: k === 1 || k === 4 ? 'left' : 'center', indent: k === 1 || k === 4 ? 1 : 0 };
+    });
+  });
+  const tr = ws.getRow(H + 1 + list.length); tr.height = 22;
+  ['Total', '', list.reduce((a, c) => a + c.students.length, 0), list.reduce((a, c) => a + c.totalHours, 0), ''].forEach((v, k) => {
+    const cell = tr.getCell(k + 1); cell.value = v; cell.fill = xlFill(XL.foot); cell.border = xlBox;
+    cell.font = xlFont({ bold: true, color: { argb: XL.maroon } }); cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+  xlSetup(ws, H);
+  ws.views = [{ state: 'frozen', ySplit: H, showGridLines: false }];
+}
+
+async function buildCourseWorkbook(course, list, period){
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Pratibha Arts Fest · Duty Attendance'; wb.created = new Date();
+  const used = new Set();
+  xlSummarySheet(wb, sheetName('Summary', used), course, list, period);
+  list.forEach(c => xlClassSheet(wb, sheetName(`${c.sem} ${c.batch}`, used), c, period));
+  return wb.xlsx.writeBuffer();
+}
+
+async function exportAllCourses(){
+  if (!state.rp.length) return;
+  const btn = $('#rp-zip-all'); setBusy(btn, true);
+  try {
+    await ensureZipLibs();
+    const period = periodText(), groups = new Map();
+    state.rp.forEach(c => { if (!groups.has(c.course)) groups.set(c.course, []); groups.get(c.course).push(c); });
+    const zip = new JSZip(), taken = new Set();
+    for (const [course, list] of groups){
+      let base = `Duty_Attendance_${safe(course)}`, k = 2, fn = base;
+      while (taken.has(fn.toLowerCase())) fn = `${base}_${k++}`;
+      taken.add(fn.toLowerCase());
+      zip.file(fn + '.xlsx', await buildCourseWorkbook(course, list, period));
+    }
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `Pratibha_Duty_Attendance_All_Courses_${ymd(new Date())}.zip`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast(`${groups.size} course file${groups.size === 1 ? '' : 's'} downloaded in one ZIP.`);
+    logAct('report_zip', `${groups.size} course file(s), ${state.rp.length} classes, ${period}`);
+  } catch (e) { toast('Could not create the ZIP. ' + (e.message || ''), 'bad'); }
+  finally { setBusy(btn, false); }
+}
+$('#rp-zip-all').onclick = exportAllCourses;
 function printReports(i){
   const one = i != null;
   document.body.classList.toggle('printing-one', one);
@@ -1752,6 +1917,63 @@ function renderSettings(){
     bh.dataset.on = on ? '1' : '0';
   }
 }
+/* ---------- Bulk full-day entry (admin) ---------- */
+const bkOpts = (items, label) => `<option value="">${esc(label)}</option>` + items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+function initBulk(){
+  $('#bk-course').innerHTML = bkOpts(uniq(state.batches.map(b => b.course)), 'Select course');
+  bkSems(); fillBulkDates();
+}
+function bkSems(){
+  const c = $('#bk-course').value;
+  $('#bk-sem').innerHTML = bkOpts(uniq(state.batches.filter(b => b.course === c).map(b => b.semester)), 'Select semester');
+  bkBatches();
+}
+function bkBatches(){
+  const c = $('#bk-course').value, s = $('#bk-sem').value;
+  $('#bk-batch').innerHTML = bkOpts(uniq(state.batches.filter(b => b.course === c && b.semester === s).map(b => b.batch)), 'Select batch');
+}
+function fillBulkDates(){
+  const dates = festDates(state.cfg), f = $('#bk-from').value, t = $('#bk-to').value;
+  const opts = dates.map(d => `<option value="${d}">${esc(fmtDate(d))} ${d.slice(0,4)}</option>`).join('');
+  $('#bk-from').innerHTML = opts; $('#bk-to').innerHTML = opts;
+  $('#bk-from').value = dates.includes(f) ? f : dates[0];
+  $('#bk-to').value = dates.includes(t) ? t : dates[dates.length - 1];
+}
+$('#bk-course').onchange = bkSems;
+$('#bk-sem').onchange = bkBatches;
+$('#bk-go').onclick = async () => {
+  const err = $('#bk-err'), btn = $('#bk-go'); err.textContent = ''; $('#bk-result').innerHTML = '';
+  const course = $('#bk-course').value, sem = $('#bk-sem').value, batch = $('#bk-batch').value;
+  const names = uniq($('#bk-names').value.split('\n').map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean));
+  const a = $('#bk-from').value, b = $('#bk-to').value;
+  const dates = festDates(state.cfg).filter(d => d >= a && d <= b);
+  if (!course || !sem || !batch){ err.textContent = 'Select the course, semester and batch.'; return; }
+  if (!names.length){ err.textContent = 'Enter at least one student name.'; return; }
+  if (!dates.length){ err.textContent = 'The "To" date must be on or after the "From" date.'; return; }
+  const ok = await modal({
+    title: 'Review bulk entry', confirm: 'Mark full day',
+    message: `<table>
+        <tr><td>Class</td><td><b>${esc(course)} · ${esc(sem)} · ${esc(batch)}</b></td></tr>
+        <tr><td>Dates</td><td><b>${dates.length} day${dates.length === 1 ? '' : 's'}: ${esc(fmtDate(dates[0]))} – ${esc(fmtDate(dates[dates.length - 1]))}</b></td></tr>
+        <tr><td>Hours</td><td><b>All ${state.cfg.periods} hours (full day)</b></td></tr>
+        <tr><td>Students</td><td><b>${names.length}</b></td></tr>
+      </table>
+      <div class="namebox">${names.map(n => `<div>${esc(n)}</div>`).join('')}</div>`
+  });
+  if (!ok) return;
+  setBusy(btn, true);
+  try {
+    const r = await api('bulkMark', { course, semester: sem, batch, names, dates });
+    state.recsLoaded = false; state.sugCache = {};
+    const dup = r.skipped ? `<br>${r.skipped} hour entr${r.skipped === 1 ? 'y was' : 'ies were'} already recorded and skipped.` : '';
+    $('#bk-result').innerHTML = `<div class="result ${r.added ? 'ok' : 'warn'}">${r.added
+      ? `Saved ${r.added} hour entr${r.added === 1 ? 'y' : 'ies'} for ${r.students} student${r.students === 1 ? '' : 's'} over ${r.days} day${r.days === 1 ? '' : 's'}.`
+      : 'Nothing new to save.'}${dup}</div>`;
+    if (r.added){ $('#bk-names').value = ''; toast('Full-day attendance saved.'); }
+  } catch (e) { err.textContent = e.message; }
+  finally { setBusy(btn, false); }
+};
+
 async function changeDates(action, date, btn){
   setBusy(btn, true);
   try {
@@ -1759,7 +1981,7 @@ async function changeDates(action, date, btn){
     state.cfg.extraDates = r.extraDates;
     const dates = festDates(state.cfg);
     if (!dates.includes(state.mk.date) && state.mk.date && state.mk.date !== state.cfg.today) state.mk.date = '';
-    renderDateChips(dates); initRecordFilters(dates); initReportFilters(dates); renderSettings();
+    renderDateChips(dates); initRecordFilters(dates); initReportFilters(dates); renderSettings(); fillBulkDates();
     toast(action === 'addDate' ? 'Date added. It is now visible to all users.' : 'Date removed. Attendance already recorded for it is kept.');
   } catch (e) { toast(e.message, 'bad'); }
   finally { if (btn.isConnected) setBusy(btn, false); }
@@ -1889,7 +2111,7 @@ async function refreshInit(force){
       const dates = festDates(r.config);
       if (cfgChanged) state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
       renderDateChips(dates);
-      if (datesChanged){ initRecordFilters(dates); initReportFilters(dates); }
+      if (datesChanged){ initRecordFilters(dates); initReportFilters(dates); if (state.user.role === 'admin') fillBulkDates(); }
     }
     $('#who-override').hidden = !hasAfterHours();
     if (cfgChanged || overrideChanged){ renderMarkWindowStatus(); renderRecords(); }
