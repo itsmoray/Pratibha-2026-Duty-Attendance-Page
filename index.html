@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="Duty Attendance">
 <title>Duty Attendance · Pratibha Arts Fest 2026-27</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="icon" href="Logo.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -867,7 +869,7 @@ function show(view){
 function signOut(expired){
   if (!expired && state.token) logAct('signout');
   if (markCountdownTimer){ clearInterval(markCountdownTimer); markCountdownTimer = null; }
-  state.token = null; store.del('pa_token');
+  state.token = null; store.del('pa_token'); store.del('pa_boot');
   state.user = null; state.recs = []; state.recsLoaded = false; state.sugCache = {};
   if (!expired) store.del('pa_draft');
   $('#password').value = '';
@@ -893,7 +895,21 @@ $('#btn-out').onclick = () => signOut(false);
 async function boot(){
   const r = await api('init');
   state.user = r.user; state.cfg = r.config; state.batches = r.batches;
+  store.set('pa_boot', JSON.stringify({ user: r.user, config: r.config, batches: r.batches }));
   buildApp(); show('app');
+}
+/* Speed: open the app instantly from the last successful init (same day, token not expired),
+   then confirm with the server in the background (see refreshInit). */
+function instantBoot(){
+  try {
+    const snap = JSON.parse(store.get('pa_boot') || 'null');
+    if (!snap || !snap.user || !snap.config || !snap.batches || snap.config.today !== ymd(new Date())) return false;
+    const p = String(state.token).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    if (!(JSON.parse(atob(p)).x > Date.now())) return false;
+    state.user = snap.user; state.cfg = snap.config; state.batches = snap.batches;
+    buildApp(); show('app');
+    return true;
+  } catch (e) { state.user = null; return false; }
 }
 
 /* ---------- public (no login) attendance check ---------- */
@@ -1816,14 +1832,18 @@ $('#user-body').addEventListener('click', async e => {
 /* Coordinators/captains: if the day changes, the 9 AM–6 PM marking window opens or closes,
    or an admin grants/revokes after-hours or all-date access (individually or for everyone),
    while the page is open, pick up the new state. */
-document.addEventListener('visibilitychange', async () => {
-  if (document.hidden || !state.user || state.user.role === 'admin') return;
+async function refreshInit(force){
+  if (!state.user || (state.user.role === 'admin' && !force)) return;
   try {
     const r = await api('init');
+    const roleChanged = r.user.role !== state.user.role;
+    const batchesChanged = force && JSON.stringify(r.batches) !== JSON.stringify(state.batches);
     const cfgChanged = r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen ||
       r.config.allowAllDates !== state.cfg.allowAllDates || r.config.afterHoursAll !== state.cfg.afterHoursAll;
     const overrideChanged = r.user.override !== state.user.override || r.user.dateOverride !== state.user.dateOverride;
-    state.user = r.user; state.cfg = r.config;
+    state.user = r.user; state.cfg = r.config; state.batches = r.batches;
+    store.set('pa_boot', JSON.stringify({ user: r.user, config: r.config, batches: r.batches }));
+    if (roleChanged || batchesChanged){ buildApp(); return; }
     if (cfgChanged){
       const dates = dateRange(r.config.dateFrom, r.config.dateTo);
       state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
@@ -1832,7 +1852,8 @@ document.addEventListener('visibilitychange', async () => {
     $('#who-override').hidden = !hasAfterHours();
     if (cfgChanged || overrideChanged){ renderMarkWindowStatus(); renderRecords(); }
   } catch (e) {}
-});
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshInit(false); });
 
 /* ---------- loading splash + start ---------- */
 const SPLASH_MIN_MS = 1500, SLOW_MSG = 'The server is taking longer than usual - trying again...';
@@ -1849,6 +1870,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catc
   const slow = setTimeout(() => setSplashMsg(SLOW_MSG), 8000);
   try {
     if (state.token){
+      if (instantBoot()){ refreshInit(true); return; }
       for (let i = 0; i < 3; i++){
         try { await boot(); return; }
         catch (e) {
