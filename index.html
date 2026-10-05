@@ -684,6 +684,17 @@ setTimeout(function(){ var s = document.getElementById('splash'); if (s) s.remov
             </div>
             <button class="btn ghost small" id="settings-afterhours" type="button" data-on="0">Turn on</button>
           </div>
+          <div class="panel" style="grid-column:1/-1">
+            <div class="settings-body">
+              <b>Fest dates — Add extra dates</b>
+              <p class="cls" style="margin-top:4px">The original fest days stay as they are. Any date you add here becomes available straight away to every user — on the marking page, Records, Class reports and the public check page.</p>
+              <div id="xd-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px"></div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center">
+              <input id="xd-input" type="date" aria-label="Date to add">
+              <button class="btn small" id="xd-add" type="button">Add date</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="panel" style="margin-top:14px">
@@ -742,6 +753,8 @@ const fmtDate = s => { const d = parseYmd(s); return `${DAYS[d.getDay()]} ${d.ge
 const fmtShort = s => { const d = parseYmd(s); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; };
 const dateRange = (a,b) => { const out = []; for (let d = parseYmd(a); d <= parseYmd(b); d.setDate(d.getDate()+1)) out.push(ymd(d)); return out; };
 const uniq = arr => [...new Set(arr)];
+// All selectable fest days: the fixed range plus any extra dates the admin added.
+const festDates = cfg => uniq([...dateRange(cfg.dateFrom, cfg.dateTo), ...(cfg.extraDates || [])]).sort();
 const mq = window.matchMedia('(max-width: 700px)');
 
 // [1,2,3,5] -> "1–3, 5"
@@ -917,7 +930,7 @@ async function bootPublic(){
   try {
     const r = await api('publicInit');
     state.pubCfg = r.config; state.pubBatches = r.batches;
-    const dates = dateRange(r.config.dateFrom, r.config.dateTo);
+    const dates = festDates(r.config);
     state.pub.date = dates.includes(r.config.today) ? r.config.today : dates[0];
     renderPubDateChips(dates);
     fillPubCourse();
@@ -1063,7 +1076,7 @@ function buildApp(){
   $('#tab-records-btn').hidden = !canEditRecords();
   $('#tab-reports-btn').hidden = !canEditRecords();
 
-  const dates = dateRange(state.cfg.dateFrom, state.cfg.dateTo);
+  const dates = festDates(state.cfg);
   const today = state.cfg.today || ymd(new Date());
   state.mk = { date: dates.includes(today) ? today : (canPickAnyDate() ? dates[0] : ''), course: '', sem: '', batch: '', hours: new Set() };
   renderDateChips(dates); renderHourChips();
@@ -1712,6 +1725,7 @@ async function loadUsers(){
     state.users = r.users;
     state.cfg.allowAllDates = r.allowAllDates;
     state.cfg.afterHoursAll = r.afterHoursAll;
+    state.cfg.extraDates = r.extraDates || [];
     renderUsers(); renderSettings();
   }
   catch (e) { toast(e.message, 'bad'); }
@@ -1723,6 +1737,14 @@ function renderSettings(){
     b.textContent = on ? 'Turn off' : 'Turn on';
     b.dataset.on = on ? '1' : '0';
   }
+  const xl = $('#xd-list');
+  if (xl){
+    const ex = state.cfg.extraDates || [];
+    xl.innerHTML = ex.length
+      ? ex.map(d => `<button type="button" class="btn ghost small" data-xd="${d}" title="Remove this date">${esc(fmtDate(d))} ${d.slice(0,4)} &nbsp;✕</button>`).join('')
+      : '<span class="cls">No extra dates added yet.</span>';
+    $$('#xd-list [data-xd]').forEach(b => b.onclick = () => changeDates('removeDate', b.dataset.xd, b));
+  }
   const bh = $('#settings-afterhours');
   if (bh){
     const on = !!state.cfg.afterHoursAll;
@@ -1730,6 +1752,24 @@ function renderSettings(){
     bh.dataset.on = on ? '1' : '0';
   }
 }
+async function changeDates(action, date, btn){
+  setBusy(btn, true);
+  try {
+    const r = await api(action, { date });
+    state.cfg.extraDates = r.extraDates;
+    const dates = festDates(state.cfg);
+    if (!dates.includes(state.mk.date) && state.mk.date && state.mk.date !== state.cfg.today) state.mk.date = '';
+    renderDateChips(dates); initRecordFilters(dates); initReportFilters(dates); renderSettings();
+    toast(action === 'addDate' ? 'Date added. It is now visible to all users.' : 'Date removed. Attendance already recorded for it is kept.');
+  } catch (e) { toast(e.message, 'bad'); }
+  finally { if (btn.isConnected) setBusy(btn, false); }
+}
+$('#xd-add').onclick = async () => {
+  const inp = $('#xd-input');
+  if (!inp.value){ toast('Pick a date first.', 'bad'); return; }
+  await changeDates('addDate', inp.value, $('#xd-add'));
+  inp.value = '';
+};
 $('#settings-alldates').onclick = async () => {
   const btn = $('#settings-alldates'), grant = btn.dataset.on !== '1';
   setBusy(btn, true);
@@ -1841,13 +1881,15 @@ async function refreshInit(force){
     const cfgChanged = r.config.today !== state.cfg.today || r.config.markOpen !== state.cfg.markOpen ||
       r.config.allowAllDates !== state.cfg.allowAllDates || r.config.afterHoursAll !== state.cfg.afterHoursAll;
     const overrideChanged = r.user.override !== state.user.override || r.user.dateOverride !== state.user.dateOverride;
+    const datesChanged = JSON.stringify(r.config.extraDates || []) !== JSON.stringify(state.cfg.extraDates || []);
     state.user = r.user; state.cfg = r.config; state.batches = r.batches;
     store.set('pa_boot', JSON.stringify({ user: r.user, config: r.config, batches: r.batches }));
     if (roleChanged || batchesChanged){ buildApp(); return; }
-    if (cfgChanged){
-      const dates = dateRange(r.config.dateFrom, r.config.dateTo);
-      state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
+    if (cfgChanged || datesChanged){
+      const dates = festDates(r.config);
+      if (cfgChanged) state.mk.date = dates.includes(r.config.today) ? r.config.today : '';
       renderDateChips(dates);
+      if (datesChanged){ initRecordFilters(dates); initReportFilters(dates); }
     }
     $('#who-override').hidden = !hasAfterHours();
     if (cfgChanged || overrideChanged){ renderMarkWindowStatus(); renderRecords(); }
